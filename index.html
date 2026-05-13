@@ -1091,7 +1091,13 @@
         }
 
         function startDegassing() {
-            if (degRunning) return;
+            if (degRunning) {
+                // Pause
+                degRunning = false;
+                if (degAnimationId) cancelAnimationFrame(degAnimationId);
+                document.getElementById('deg-start-btn').textContent = '▶ Continue';
+                return;
+            }
             const params = getDegParams();
             
             if (degTime === 0) {
