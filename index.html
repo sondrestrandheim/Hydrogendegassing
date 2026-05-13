@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hydrogen i Aluminium - Interaktiv Visualisering</title>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+        :root {
+            --primary: #1a5276;
+            --secondary: #2980b9;
+            --accent: #e74c3c;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            background: #ddd;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: var(--text);
+        }
+
+        .tab:hover {
+            background: #bbb;
+        }
+
+        .tab.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 0 8px 8px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .plot-container {
+            width: 100%;
+            height: 500px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: #f0f4f8;
+            border-radius: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 0.5rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        .slider-value {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: #eaf2f8;
+            border-left: 4px solid var(--secondary);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box h3 {
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .result-box {
+            background: #d5f5e3;
+            border-left: 4px solid #27ae60;
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.1rem;
+        }
+
+        .result-box .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .equation {
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            font-style: italic;
+            background: #f9f9f9;
+            padding: 0.8rem;
+            border-radius: 6px;
+            text-align: center;
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+            .tabs {
+                flex-direction: column;
+            }
+            .tab {
+                border-radius: 8px;
+            }
+        }
+
+        .warning {
+            background: #fdebd0;
+            border-left: 4px solid #f39c12;
+            padding: 0.8rem 1rem;
+            margin-top: 1rem;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Hydrogen i Aluminium</h1>
+        <p>Interaktiv visualisering av hydrogenløselighet og -fjerning</p>
+        <p style="font-size: 0.85rem; margin-top: 0.5rem; opacity: 0.7;">Basert på: Arild Håkonsen, 07.05.2026</p>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('intro')">Introduksjon</button>
+            <button class="tab" onclick="showTab('water')">Vanndamp i luft</button>
+            <button class="tab" onclick="showTab('solubility')">Løselighet vs. Temperatur</button>
+            <button class="tab" onclick="showTab('pressure')">Trykkeffekt</button>
+            <button class="tab" onclick="showTab('alloys')">Legeringseffekt</button>
+            <button class="tab" onclick="showTab('degassing')">Degassing-simulering</button>
+            <button class="tab" onclick="showTab('calculator')">Kalkulator</button>
+        </div>
+
+        <!-- INTRO TAB -->
+        <div id="tab-intro" class="tab-content active">
+            <div class="info-box">
+                <h3>Om hydrogen i aluminium</h3>
+                <p>Hydrogen er den eneste gassen som er løselig i aluminium. Løseligheten er mye høyere i flytende aluminium enn i fast aluminium. Hvis hydrogeninnholdet er for høyt i smelten, vil porøsitet dannes under størkning.</p>
+            </div>
+            
+            <div class="two-col">
+                <div>
+                    <h3>Typiske krav</h3>
+                    <p>For DC-støpte produkter: <strong>&lt; 0,15–0,20 ml H₂/100g Al</strong></p>
+                    <br>
+                    <h3>Hydrogenkilde</h3>
+                    <p>Hovedkilden til hydrogen er fuktighet i omgivende luft eller i ildfast materiale. Vanndamp reagerer med flytende aluminium:</p>
+                    <div class="equation">3H₂O(g) + 2Al(l) → Al₂O₃(s) + 3H₂(g)</div>
+                    <p>Noe av dette hydrogenet løses som atomer i smelten:</p>
+                    <div class="equation">H₂(g) → 2[H] (løst i Al)</div>
+                </div>
+                <div>
+                    <h3>Sieverts lov</h3>
+                    <p>Løseligheten av diatomiske gasser i flytende metaller beregnes med Sieverts lov:</p>
+                    <div class="equation">S = K<sub>T</sub> · C<sub>legering</sub> · √P<sub>H₂</sub></div>
+                    <p>der:</p>
+                    <div class="equation">K<sub>T</sub> = K₀ · exp(-ΔH / RT)</div>
+                    <p style="margin-top:1rem"><strong>Konstanter (Anyalebechi, 2022):</strong></p>
+                    <table style="width:100%; border-collapse: collapse; margin-top:0.5rem;">
+                        <tr style="background:#eee"><th style="padding:0.4rem; text-align:left;">Parameter</th><th>Flytende</th><th>Fast</th></tr>
+                        <tr><td style="padding:0.4rem;">K₀ [ml/100g]</td><td style="text-align:center">419,8</td><td style="text-align:center">67,14</td></tr>
+                        <tr><td style="padding:0.4rem;">ΔH [J/mol]</td><td style="text-align:center">49534</td><td style="text-align:center">57079</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div id="intro-plot" class="plot-container" style="margin-top:2rem;"></div>
+        </div>
+
+        <!-- WATER VAPOUR TAB -->
+        <div id="tab-water" class="tab-content">
+            <div class="info-box">
+                <h3>Vanndampmetning i luft</h3>
+                <p>Mengden vanndamp som kan absorberes av luft er sterkt temperaturavhengig. Ved romtemperatur er metningen 17,3 g/m³ (~14 300 ppm vann, ~1600 ppm H₂). Høyere temperatur = mer fuktighet = mer hydrogen tilgjengelig for å reagere med smelten.</p>
+            </div>
+            <div id="water-plot" class="plot-container"></div>
+        </div>
+
+        <!-- SOLUBILITY TAB -->
+        <div id="tab-solubility" class="tab-content">
+            <div class="info-box">
+                <h3>Hydrogenløselighet vs. temperatur</h3>
+                <p>Plottet viser løseligheten i rent aluminium ved 1 atm trykk. Legg merke til det store spranget mellom fast og flytende fase – dette driver porøsitetsdannelse under størkning.</p>
+            </div>
+            <div id="solubility-plot" class="plot-container"></div>
+        </div>
+
+        <!-- PRESSURE TAB -->
+        <div id="tab-pressure" class="tab-content">
+            <div class="info-box">
+                <h3>Trykkeffekt på løselighet</h3>
+                <p>Ifølge Sieverts lov er løseligheten proporsjonal med √P<sub>H₂</sub>. Lavere trykk (f.eks. ved høyere altitude eller vakuumbehandling) gir lavere løselighet, noe som driver hydrogen ut av smelten.</p>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Trykk å vise (velg flere):</label>
+                    <div>
+                        <label><input type="checkbox" id="p-0.25" value="0.25"> 0,25 atm</label><br>
+                        <label><input type="checkbox" id="p-0.5" value="0.5" checked> 0,5 atm</label><br>
+                        <label><input type="checkbox" id="p-0.75" value="0.75"> 0,75 atm</label><br>
+                        <label><input type="checkbox" id="p-1.0" value="1.0" checked> 1,0 atm (havnivå)</label><br>
+                        <label><input type="checkbox" id="p-1.5" value="1.5"> 1,5 atm</label><br>
+                        <label><input type="checkbox" id="p-2.0" value="2.0" checked> 2,0 atm</label>
+                    </div>
+                </div>
+            </div>
+            <div id="pressure-plot" class="plot-container"></div>
+            <button onclick="updatePressurePlot()" style="margin-top:1rem; padding:0.6rem 1.5rem; background:var(--secondary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">Oppdater plot</button>
+        </div>
+
+        <!-- ALLOYS TAB -->
+        <div id="tab-alloys" class="tab-content">
+            <div class="info-box">
+                <h3>Legeringseffekt på løselighet</h3>
+                <p>Legeringselementer påvirker hydrogenløseligheten gjennom korreksjonsfaktoren C<sub>legering</sub>:</p>
+                <div class="equation">C<sub>legering</sub> = ∏(1 + e<sub>i</sub>·wt%<sub>i</sub> + r<sub>i</sub>·wt%<sub>i</sub>²)</div>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Si (wt%): <span class="slider-value" id="si-val">0</span></label>
+                    <input type="range" id="si-slider" min="0" max="13" step="0.5" value="0" oninput="updateAlloyPlot()">
+                </div>
+                <div class="control-group">
+                    <label>Mg (wt%): <span class="slider-value" id="mg-val">0</span></label>
+                    <input type="range" id="mg-slider" min="0" max="6" step="0.5" value="0" oninput="updateAlloyPlot()">
+                </div>
+                <div class="control-group">
+                    <label>Mn (wt%): <span class="slider-value" id="mn-val">0</span></label>
+                    <input type="range" id="mn-slider" min="0" max="2" step="0.1" value="0" oninput="updateAlloyPlot()">
+                </div>
+                <div class="control-group">
+                    <label>Cu (wt%): <span class="slider-value" id="cu-val">0</span></label>
+                    <input type="range" id="cu-slider" min="0" max="6" step="0.5" value="0" oninput="updateAlloyPlot()">
+                </div>
+                <div class="control-group">
+                    <label>Fe (wt%): <span class="slider-value" id="fe-val">0</span></label>
+                    <input type="range" id="fe-slider" min="0" max="1" step="0.1" value="0" oninput="updateAlloyPlot()">
+                </div>
+            </div>
+            <div id="alloy-plot" class="plot-container"></div>
+            <div class="info-box" style="margin-top:1rem;">
+                <h3>Vanlige legeringer (omtrentlig sammensetning)</h3>
+                <p>
+                    <button onclick="setAlloy(0,0,0,0,0)" class="alloy-btn">Rent Al</button>
+                    <button onclick="setAlloy(0.6,1.0,0,0,0.2)" class="alloy-btn">6063 (Si:0.6, Mg:1.0)</button>
+                    <button onclick="setAlloy(0.4,0.5,0.15,0,0.2)" class="alloy-btn">6060 (Si:0.4, Mg:0.5)</button>
+                    <button onclick="setAlloy(9,0.3,0.3,3.5,0.8)" class="alloy-btn">A380 (Si:9, Cu:3.5)</button>
+                    <button onclick="setAlloy(0.2,4.5,0.5,0,0.2)" class="alloy-btn">5083 (Mg:4.5)</button>
+                </p>
+                <style>
+                    .alloy-btn {
+                        margin: 0.3rem;
+                        padding: 0.4rem 0.8rem;
+                        background: var(--secondary);
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 0.85rem;
+                    }
+                    .alloy-btn:hover { background: var(--primary); }
+                </style>
+            </div>
+        </div>
+
+        <!-- DEGASSING TAB -->
+        <div id="tab-degassing" class="tab-content">
+            <div class="info-box">
+                <h3>Argon-degassing simulering</h3>
+                <p>Denne simuleringen viser hvordan argonbobler injiseres i bunnen av smelten, stiger opp, og absorberer hydrogen underveis. Boblene vokser pga. lavere hydrostatisk trykk og opptak av H₂. Hydrogenet transporteres fra smelten inn i boblene drevet av forskjellen mellom likevekts-partialtrykk og faktisk partialtrykk i boblen.</p>
+            </div>
+
+            <!-- Formler og trykkforklaring -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+                <div class="info-box" style="margin:0;">
+                    <h3>Trykk i systemet</h3>
+                    <p><strong>Atmosfærisk trykk:</strong></p>
+                    <div class="equation">P<sub>atm</sub> = 101 325 Pa (1 atm)</div>
+                    <p style="margin-top:0.5rem;"><strong>Metallostatisk trykk</strong> (trykk fra vekten av flytende Al over boblen):</p>
+                    <div class="equation">P<sub>met</sub>(h) = ρ<sub>Al</sub> · g · (H - h)</div>
+                    <p style="margin-top:0.5rem;"><strong>Totaltrykk ved dybde h fra overflaten:</strong></p>
+                    <div class="equation">P<sub>total</sub>(h) = P<sub>atm</sub> + ρ<sub>Al</sub> · g · h</div>
+                    <p style="font-size:0.85rem; margin-top:0.5rem; color:#555;">der ρ<sub>Al</sub> = 2350 kg/m³, g = 9,81 m/s², H = smeltedybde</p>
+                    <p style="font-size:0.85rem; color:#555;"><strong>Eksempel:</strong> Ved 0,8 m dybde: P<sub>bunn</sub> = 101 325 + 2350·9,81·0,8 = <strong>119 770 Pa</strong> (1,18 atm)</p>
+                </div>
+                <div class="info-box" style="margin:0;">
+                    <h3>Bobleekspansjon & massetransport</h3>
+                    <p><strong>Ideell gasslov → boblevolum ekspanderer:</strong></p>
+                    <div class="equation">V(h) = V₀ · P<sub>bunn</sub> / P(h)</div>
+                    <div class="equation">d(h) = d₀ · (P<sub>bunn</sub> / P(h))<sup>1/3</sup></div>
+                    <p style="margin-top:0.5rem;"><strong>Drivkraft for H₂-transport inn i boblen:</strong></p>
+                    <div class="equation">ΔC = [H]<sub>smelte</sub> − K<sub>T</sub>·√P<sub>H₂,boble</sub></div>
+                    <p style="font-size:0.85rem; margin-top:0.5rem; color:#555;">Frisk argonboble: P<sub>H₂</sub> ≈ 0 → stor drivkraft.<br>
+                    Ettersom boblen absorberer H₂, øker P<sub>H₂</sub> i boblen og drivkraften avtar.</p>
+                    <p style="margin-top:0.5rem;"><strong>Stigehastighet (Mendelson):</strong></p>
+                    <div class="equation">v = √(2σ/(ρ·d) + g·d/2)</div>
+                    <p style="font-size:0.85rem; color:#555;">σ = 0,87 N/m (overflatespenning flytende Al)</p>
+                </div>
+            </div>
+
+            <!-- Live trykkberegning -->
+            <div id="deg-pressure-display" style="background:#f0f4f8; padding:1rem 1.5rem; border-radius:8px; margin-bottom:1.5rem; font-size:0.95rem;">
+                <strong>Beregnede trykk for valgte parametere:</strong><br>
+                <span id="deg-p-surface">P<sub>overflate</sub> = 101 325 Pa (1,00 atm)</span> &nbsp;|&nbsp;
+                <span id="deg-p-mid">P<sub>halvdybde</sub> = — Pa</span> &nbsp;|&nbsp;
+                <span id="deg-p-bottom">P<sub>bunn</sub> = — Pa</span> &nbsp;|&nbsp;
+                <span id="deg-p-ratio">Volumekspansjon bunn→topp: —×</span>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label>Smeltetemperatur (°C):</label>
+                    <input type="number" id="deg-temp" value="720" min="660" max="900">
+                </div>
+                <div class="control-group">
+                    <label>Start H₂-innhold (ml/100g):</label>
+                    <input type="number" id="deg-h2-start" value="0.35" min="0.05" max="1.0" step="0.05">
+                </div>
+                <div class="control-group">
+                    <label>Argon-flyt (L/min):</label>
+                    <input type="number" id="deg-flow" value="5" min="1" max="30" step="1">
+                </div>
+                <div class="control-group">
+                    <label>Smeltevekt (kg):</label>
+                    <input type="number" id="deg-mass" value="500" min="50" max="5000" step="50">
+                </div>
+                <div class="control-group">
+                    <label>Smeltedybde (m):</label>
+                    <input type="number" id="deg-depth" value="0.8" min="0.3" max="2.0" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Boble startdiameter (mm):</label>
+                    <input type="number" id="deg-bubble-d" value="5" min="1" max="20" step="1">
+                </div>
+                <div class="control-group">
+                    <label>Rotor RPM:</label>
+                    <input type="number" id="deg-rpm" value="700" min="100" max="1500" step="50">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
+                <button id="deg-start-btn" onclick="startDegassing()" style="padding:0.7rem 1.8rem; background:#27ae60; color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem; font-weight:600;">▶ Start simulering</button>
+                <button onclick="stopDegassing()" style="padding:0.7rem 1.8rem; background:#e74c3c; color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem; font-weight:600;">⏹ Stopp</button>
+                <button onclick="resetDegassing()" style="padding:0.7rem 1.8rem; background:#7f8c8d; color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem; font-weight:600;">↺ Reset</button>
+                <span id="deg-time-display" style="align-self:center; font-size:1.1rem; font-weight:600; color:var(--primary);">Tid: 0 min</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 400px 1fr; gap:1.5rem; align-items:start;">
+                <!-- Vessel animation -->
+                <div style="position:relative;">
+                    <canvas id="degassing-canvas" width="400" height="550" style="border:2px solid #ccc; border-radius:8px; background:#1a1a2e;"></canvas>
+                    <div style="margin-top:0.5rem; font-size:0.8rem; color:#666; text-align:center;">
+                        Tverrsnitt av degassing-enhet
+                    </div>
+                </div>
+                <!-- Plots -->
+                <div>
+                    <div id="deg-h2-plot" style="width:100%; height:220px;"></div>
+                    <div id="deg-bubble-plot" style="width:100%; height:220px; margin-top:0.5rem;"></div>
+                    <div id="deg-pressure-plot" style="width:100%; height:220px; margin-top:0.5rem;"></div>
+                </div>
+            </div>
+
+            <!-- Summary stats -->
+            <div id="deg-stats" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-top:1.5rem;">
+                <div style="background:#eaf2f8; padding:1rem; border-radius:8px; text-align:center;">
+                    <div style="font-size:0.8rem; color:#666;">H₂ inn (start)</div>
+                    <div id="stat-h2-in" style="font-size:1.4rem; font-weight:700; color:var(--primary);">0.35 ml/100g</div>
+                </div>
+                <div style="background:#d5f5e3; padding:1rem; border-radius:8px; text-align:center;">
+                    <div style="font-size:0.8rem; color:#666;">H₂ nå</div>
+                    <div id="stat-h2-now" style="font-size:1.4rem; font-weight:700; color:#27ae60;">0.35 ml/100g</div>
+                </div>
+                <div style="background:#fdebd0; padding:1rem; border-radius:8px; text-align:center;">
+                    <div style="font-size:0.8rem; color:#666;">H₂ fjernet</div>
+                    <div id="stat-h2-removed" style="font-size:1.4rem; font-weight:700; color:#f39c12;">0%</div>
+                </div>
+                <div style="background:#f5eef8; padding:1rem; border-radius:8px; text-align:center;">
+                    <div style="font-size:0.8rem; color:#666;">Argon brukt</div>
+                    <div id="stat-argon" style="font-size:1.4rem; font-weight:700; color:#9b59b6;">0 L</div>
+                </div>
+                <div style="background:#eaf2f8; padding:1rem; border-radius:8px; text-align:center;">
+                    <div style="font-size:0.8rem; color:#666;">Boble ut-diameter</div>
+                    <div id="stat-bubble-out" style="font-size:1.4rem; font-weight:700; color:var(--primary);">- mm</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALCULATOR TAB -->
+        <div id="tab-calculator" class="tab-content">
+            <div class="info-box">
+                <h3>Hydrogenløselighet-kalkulator</h3>
+                <p>Beregn hydrogenløseligheten for en spesifikk temperatur, trykk og legeringssammensetning.</p>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Temperatur (°C):</label>
+                    <input type="number" id="calc-temp" value="720" min="400" max="1000">
+                </div>
+                <div class="control-group">
+                    <label>Trykk (atm):</label>
+                    <input type="number" id="calc-pressure" value="1.0" min="0.1" max="5" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Si (wt%):</label>
+                    <input type="number" id="calc-si" value="0" min="0" max="13" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Mg (wt%):</label>
+                    <input type="number" id="calc-mg" value="0" min="0" max="6" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Mn (wt%):</label>
+                    <input type="number" id="calc-mn" value="0" min="0" max="2" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Cu (wt%):</label>
+                    <input type="number" id="calc-cu" value="0" min="0" max="6" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Fe (wt%):</label>
+                    <input type="number" id="calc-fe" value="0" min="0" max="1" step="0.1">
+                </div>
+            </div>
+            <button onclick="calculate()" style="padding:0.8rem 2rem; background:var(--secondary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:1.1rem; font-weight:600;">Beregn</button>
+            <div id="calc-result" class="result-box" style="display:none;"></div>
+            <div id="calc-plot" class="plot-container" style="margin-top:2rem;"></div>
+        </div>
+    </div>
+
+    <script>
+        // === CONSTANTS ===
+        const R = 8.314; // J/(mol·K)
+        const T_melt = 660.3; // °C melting point of pure Al
+        
+        // Solubility constants (Anyalebechi, 2022)
+        const K0_liquid = 419.8; // ml/100g
+        const dH_liquid = 49534; // J/mol
+        const K0_solid = 67.14;  // ml/100g
+        const dH_solid = 57079;  // J/mol
+        
+        // Alloy correction factors (Sigworth, 1999)
+        const alloyFactors = {
+            Si: { e: 0.03, r: -0.0008 },
+            Mg: { e: -0.01, r: 0 },
+            Mn: { e: 0.06, r: 0 },
+            Cu: { e: 0.03, r: -0.0004 },
+            Fe: { e: 0, r: 0 }
+        };
+
+        // === CALCULATION FUNCTIONS ===
+        function calcKT(T_celsius, phase) {
+            const T = T_celsius + 273.15;
+            if (phase === 'liquid') {
+                return K0_liquid * Math.exp(-dH_liquid / (R * T));
+            } else {
+                return K0_solid * Math.exp(-dH_solid / (R * T));
+            }
+        }
+
+        function calcCalloy(si, mg, mn, cu, fe) {
+            let C = 1;
+            C *= (1 + alloyFactors.Si.e * si + alloyFactors.Si.r * si * si);
+            C *= (1 + alloyFactors.Mg.e * mg + alloyFactors.Mg.r * mg * mg);
+            C *= (1 + alloyFactors.Mn.e * mn + alloyFactors.Mn.r * mn * mn);
+            C *= (1 + alloyFactors.Cu.e * cu + alloyFactors.Cu.r * cu * cu);
+            C *= (1 + alloyFactors.Fe.e * fe + alloyFactors.Fe.r * fe * fe);
+            return C;
+        }
+
+        function calcSolubility(T_celsius, P_atm, si, mg, mn, cu, fe) {
+            const phase = T_celsius >= T_melt ? 'liquid' : 'solid';
+            const KT = calcKT(T_celsius, phase);
+            const Calloy = calcCalloy(si, mg, mn, cu, fe);
+            return KT * Calloy * Math.sqrt(P_atm);
+        }
+
+        // Water vapour saturation (Magnus formula)
+        function waterVapourSaturation(T_celsius) {
+            // Returns g/m³
+            const a = 17.27;
+            const b = 237.7;
+            const esat = 611.2 * Math.exp((a * T_celsius) / (b + T_celsius)); // Pa
+            const Mw = 18.015; // g/mol
+            const Rgas = 8.314;
+            const T = T_celsius + 273.15;
+            return (esat * Mw) / (Rgas * T); // g/m³
+        }
+
+        // === TAB NAVIGATION ===
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Trigger plot resize
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+                // Initialize plots on first view
+                if (tabName === 'water') plotWaterVapour();
+                if (tabName === 'solubility') plotSolubility();
+                if (tabName === 'pressure') updatePressurePlot();
+                if (tabName === 'alloys') updateAlloyPlot();
+                if (tabName === 'intro') plotIntro();
+                if (tabName === 'degassing') initDegassingPlots();
+            }, 50);
+        }
+
+        // === PLOT: INTRO ===
+        function plotIntro() {
+            const temps_solid = [];
+            const sol_solid = [];
+            const temps_liquid = [];
+            const sol_liquid = [];
+
+            for (let T = 400; T <= T_melt; T += 5) {
+                temps_solid.push(T);
+                sol_solid.push(calcKT(T, 'solid'));
+            }
+            for (let T = T_melt; T <= 900; T += 5) {
+                temps_liquid.push(T);
+                sol_liquid.push(calcKT(T, 'liquid'));
+            }
+
+            const data = [
+                { x: temps_solid, y: sol_solid, name: 'Fast Al', line: { color: '#2980b9', width: 3 } },
+                { x: temps_liquid, y: sol_liquid, name: 'Flytende Al', line: { color: '#e74c3c', width: 3 } },
+                { x: [T_melt, T_melt], y: [0, Math.max(...sol_liquid)], name: 'Smeltepunkt (660°C)', 
+                  line: { color: '#95a5a6', width: 2, dash: 'dash' }, mode: 'lines' },
+                { x: [400, 900], y: [0.2, 0.2], name: 'Typisk krav (0,2 ml/100g)', 
+                  line: { color: '#f39c12', width: 2, dash: 'dot' }, mode: 'lines' }
+            ];
+
+            const layout = {
+                title: 'Hydrogenløselighet i rent aluminium (P = 1 atm)',
+                xaxis: { title: 'Temperatur (°C)', gridcolor: '#eee' },
+                yaxis: { title: 'Løselighet (ml H₂/100g Al)', gridcolor: '#eee' },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' },
+                legend: { x: 0.02, y: 0.98 },
+                shapes: [{
+                    type: 'rect',
+                    x0: T_melt - 1, x1: T_melt + 1,
+                    y0: sol_solid[sol_solid.length - 1], y1: sol_liquid[0],
+                    fillcolor: 'rgba(231, 76, 60, 0.1)',
+                    line: { width: 0 }
+                }]
+            };
+
+            Plotly.newPlot('intro-plot', data, layout, { responsive: true });
+        }
+
+        // === PLOT: WATER VAPOUR ===
+        function plotWaterVapour() {
+            const temps = [];
+            const saturation = [];
+            const ppmWater = [];
+
+            for (let T = -10; T <= 60; T += 1) {
+                temps.push(T);
+                const sat = waterVapourSaturation(T);
+                saturation.push(sat);
+                // Convert g/m³ to ppm by mass (approx): 1 g/m³ ≈ 830 ppm for air at 1atm
+                ppmWater.push(sat * 1000 / 1.2); // mg/m³ / (kg/m³ air density) = mg/kg = ppm
+            }
+
+            const data = [
+                { x: temps, y: saturation, name: 'Vanndampmetning', 
+                  line: { color: '#2980b9', width: 3 },
+                  fill: 'tozeroy', fillcolor: 'rgba(41, 128, 185, 0.1)' }
+            ];
+
+            const layout = {
+                title: 'Vanndampmetning i luft vs. temperatur',
+                xaxis: { title: 'Temperatur (°C)', gridcolor: '#eee' },
+                yaxis: { title: 'Vanndampmetning (g/m³)', gridcolor: '#eee' },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' },
+                annotations: [{
+                    x: 20, y: waterVapourSaturation(20),
+                    text: '~17,3 g/m³ ved 20°C',
+                    showarrow: true, arrowhead: 2,
+                    ax: 60, ay: -40
+                }]
+            };
+
+            Plotly.newPlot('water-plot', data, layout, { responsive: true });
+        }
+
+        // === PLOT: SOLUBILITY vs TEMPERATURE ===
+        function plotSolubility() {
+            const temps_solid = [];
+            const sol_solid = [];
+            const temps_liquid = [];
+            const sol_liquid = [];
+
+            for (let T = 300; T <= T_melt; T += 2) {
+                temps_solid.push(T);
+                sol_solid.push(calcKT(T, 'solid'));
+            }
+            for (let T = T_melt; T <= 950; T += 2) {
+                temps_liquid.push(T);
+                sol_liquid.push(calcKT(T, 'liquid'));
+            }
+
+            const data = [
+                { x: temps_solid, y: sol_solid, name: 'Fast aluminium', 
+                  line: { color: '#3498db', width: 3 }, mode: 'lines' },
+                { x: temps_liquid, y: sol_liquid, name: 'Flytende aluminium', 
+                  line: { color: '#e74c3c', width: 3 }, mode: 'lines' },
+                { x: [T_melt], y: [calcKT(T_melt, 'solid')], name: 'Solidus', 
+                  marker: { size: 12, color: '#3498db', symbol: 'circle' }, mode: 'markers' },
+                { x: [T_melt], y: [calcKT(T_melt, 'liquid')], name: 'Liquidus', 
+                  marker: { size: 12, color: '#e74c3c', symbol: 'circle' }, mode: 'markers' }
+            ];
+
+            const layout = {
+                title: 'Hydrogenløselighet i rent aluminium ved P = 1 atm',
+                xaxis: { title: 'Temperatur (°C)', gridcolor: '#eee' },
+                yaxis: { title: 'Løselighet (ml H₂/100g Al)', gridcolor: '#eee', type: 'log' },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' },
+                legend: { x: 0.02, y: 0.98 },
+                annotations: [{
+                    x: T_melt, y: Math.log10((calcKT(T_melt, 'liquid') + calcKT(T_melt, 'solid')) / 2),
+                    text: 'Løselighetshopp<br>ved størkning',
+                    showarrow: true, arrowhead: 2,
+                    ax: 80, ay: 0,
+                    font: { size: 12 }
+                }]
+            };
+
+            Plotly.newPlot('solubility-plot', data, layout, { responsive: true });
+        }
+
+        // === PLOT: PRESSURE EFFECT ===
+        function updatePressurePlot() {
+            const pressures = [];
+            const checkboxes = document.querySelectorAll('#tab-pressure input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                if (cb.checked) pressures.push(parseFloat(cb.value));
+            });
+
+            const colors = ['#e74c3c', '#3498db', '#27ae60', '#f39c12', '#9b59b6', '#1abc9c'];
+            const data = [];
+
+            pressures.forEach((P, i) => {
+                const temps = [];
+                const sol = [];
+                for (let T = T_melt; T <= 900; T += 2) {
+                    temps.push(T);
+                    sol.push(calcKT(T, 'liquid') * Math.sqrt(P));
+                }
+                data.push({
+                    x: temps, y: sol,
+                    name: `P = ${P} atm`,
+                    line: { color: colors[i % colors.length], width: 2.5 }
+                });
+            });
+
+            // Add requirement line
+            data.push({
+                x: [T_melt, 900], y: [0.2, 0.2],
+                name: 'Typisk krav (0,2 ml/100g)',
+                line: { color: '#95a5a6', width: 2, dash: 'dot' },
+                mode: 'lines'
+            });
+
+            const layout = {
+                title: 'Hydrogenløselighet i flytende rent Al ved ulike trykk',
+                xaxis: { title: 'Temperatur (°C)', gridcolor: '#eee' },
+                yaxis: { title: 'Løselighet (ml H₂/100g Al)', gridcolor: '#eee' },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' },
+                legend: { x: 0.02, y: 0.98 }
+            };
+
+            Plotly.newPlot('pressure-plot', data, layout, { responsive: true });
+        }
+
+        // === PLOT: ALLOY EFFECT ===
+        function updateAlloyPlot() {
+            const si = parseFloat(document.getElementById('si-slider').value);
+            const mg = parseFloat(document.getElementById('mg-slider').value);
+            const mn = parseFloat(document.getElementById('mn-slider').value);
+            const cu = parseFloat(document.getElementById('cu-slider').value);
+            const fe = parseFloat(document.getElementById('fe-slider').value);
+
+            document.getElementById('si-val').textContent = si;
+            document.getElementById('mg-val').textContent = mg;
+            document.getElementById('mn-val').textContent = mn;
+            document.getElementById('cu-val').textContent = cu;
+            document.getElementById('fe-val').textContent = fe;
+
+            const Calloy = calcCalloy(si, mg, mn, cu, fe);
+
+            const temps_pure = [];
+            const sol_pure = [];
+            const temps_alloy = [];
+            const sol_alloy = [];
+
+            for (let T = T_melt; T <= 900; T += 2) {
+                temps_pure.push(T);
+                sol_pure.push(calcKT(T, 'liquid'));
+                temps_alloy.push(T);
+                sol_alloy.push(calcKT(T, 'liquid') * Calloy);
+            }
+
+            const data = [
+                { x: temps_pure, y: sol_pure, name: 'Rent aluminium', 
+                  line: { color: '#95a5a6', width: 2, dash: 'dash' } },
+                { x: temps_alloy, y: sol_alloy, name: `Legering (C=${Calloy.toFixed(4)})`, 
+                  line: { color: '#e74c3c', width: 3 } },
+                { x: [T_melt, 900], y: [0.2, 0.2], name: 'Typisk krav',
+                  line: { color: '#f39c12', width: 2, dash: 'dot' }, mode: 'lines' }
+            ];
+
+            const layout = {
+                title: `Legeringseffekt på hydrogenløselighet (C<sub>legering</sub> = ${Calloy.toFixed(4)})`,
+                xaxis: { title: 'Temperatur (°C)', gridcolor: '#eee' },
+                yaxis: { title: 'Løselighet (ml H₂/100g Al)', gridcolor: '#eee' },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' },
+                legend: { x: 0.02, y: 0.98 }
+            };
+
+            Plotly.newPlot('alloy-plot', data, layout, { responsive: true });
+        }
+
+        function setAlloy(si, mg, mn, cu, fe) {
+            document.getElementById('si-slider').value = si;
+            document.getElementById('mg-slider').value = mg;
+            document.getElementById('mn-slider').value = mn;
+            document.getElementById('cu-slider').value = cu;
+            document.getElementById('fe-slider').value = fe;
+            updateAlloyPlot();
+        }
+
+        // === CALCULATOR ===
+        function calculate() {
+            const T = parseFloat(document.getElementById('calc-temp').value);
+            const P = parseFloat(document.getElementById('calc-pressure').value);
+            const si = parseFloat(document.getElementById('calc-si').value);
+            const mg = parseFloat(document.getElementById('calc-mg').value);
+            const mn = parseFloat(document.getElementById('calc-mn').value);
+            const cu = parseFloat(document.getElementById('calc-cu').value);
+            const fe = parseFloat(document.getElementById('calc-fe').value);
+
+            const phase = T >= T_melt ? 'flytende' : 'fast';
+            const KT = calcKT(T, T >= T_melt ? 'liquid' : 'solid');
+            const Calloy = calcCalloy(si, mg, mn, cu, fe);
+            const S = KT * Calloy * Math.sqrt(P);
+
+            const resultDiv = document.getElementById('calc-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <strong>Resultat:</strong><br>
+                Fase: <strong>${phase}</strong> aluminium<br>
+                K<sub>T</sub> = ${KT.toFixed(4)} ml/100g<br>
+                C<sub>legering</sub> = ${Calloy.toFixed(4)}<br>
+                <br>
+                <strong>Hydrogenløselighet: <span class="value">${S.toFixed(4)} ml H₂/100g Al</span></strong>
+                ${S > 0.2 ? '<div class="warning">⚠️ Over typisk krav (0,2 ml/100g). Degassing anbefales!</div>' : '<div style="color:#27ae60; margin-top:0.5rem;">✓ Under typisk krav (0,2 ml/100g)</div>'}
+            `;
+
+            // Plot solubility curve with the current point marked
+            const temps = [];
+            const sol = [];
+            for (let t = (T >= T_melt ? T_melt : 300); t <= (T >= T_melt ? 950 : T_melt); t += 2) {
+                temps.push(t);
+                sol.push(calcSolubility(t, P, si, mg, mn, cu, fe));
+            }
+
+            const data = [
+                { x: temps, y: sol, name: 'Løselighet', line: { color: '#3498db', width: 2 } },
+                { x: [T], y: [S], name: `Valgt punkt (${T}°C)`, 
+                  marker: { size: 15, color: '#e74c3c', symbol: 'star' }, mode: 'markers' },
+                { x: [temps[0], temps[temps.length-1]], y: [0.2, 0.2], name: 'Typisk krav',
+                  line: { color: '#f39c12', width: 2, dash: 'dot' }, mode: 'lines' }
+            ];
+
+            const layout = {
+                title: 'Løselighet med valgte parametere',
+                xaxis: { title: 'Temperatur (°C)', gridcolor: '#eee' },
+                yaxis: { title: 'Løselighet (ml H₂/100g Al)', gridcolor: '#eee' },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' }
+            };
+
+            Plotly.newPlot('calc-plot', data, layout, { responsive: true });
+        }
+
+        // === DEGASSING SIMULATION ===
+        let degAnimationId = null;
+        let degRunning = false;
+        let degTime = 0; // seconds of simulation time
+        let degH2Current = 0.35;
+        let degH2History = [];
+        let degTimeHistory = [];
+        let degBubbles = []; // visual bubbles on canvas
+        let degBubbleSizeHistory = [];
+
+        const DEG_SIM_SPEED = 3; // seconds of sim per real second (slow for pedagogical effect)
+        const GRAVITY = 9.81;
+        const RHO_AL = 2350; // kg/m³ liquid aluminium
+        const P_ATM = 101325; // Pa
+
+        let degRotorAngle = 0; // current visual rotor angle
+        let degH2Particles = []; // small H₂ particles showing diffusion
+
+        function getDegParams() {
+            return {
+                T: parseFloat(document.getElementById('deg-temp').value),
+                h2Start: parseFloat(document.getElementById('deg-h2-start').value),
+                flowRate: parseFloat(document.getElementById('deg-flow').value), // L/min
+                meltMass: parseFloat(document.getElementById('deg-mass').value), // kg
+                depth: parseFloat(document.getElementById('deg-depth').value), // m
+                bubbleDiam: parseFloat(document.getElementById('deg-bubble-d').value) / 1000, // m
+                rpm: parseFloat(document.getElementById('deg-rpm').value)
+            };
+        }
+
+        // Calculate bubble diameter at height h from bottom (expansion due to pressure)
+        function bubbleDiamAtHeight(d0, depth, h, pH2_in_bubble) {
+            const P_bottom = P_ATM + RHO_AL * GRAVITY * depth;
+            const P_at_h = P_ATM + RHO_AL * GRAVITY * (depth - h);
+            // Volume expands: V ∝ P_bottom/P_at_h, plus extra from H2 absorbed
+            const volumeRatio = P_bottom / P_at_h;
+            return d0 * Math.pow(volumeRatio, 1/3);
+        }
+
+        // Rise velocity of a bubble (simplified Mendelson equation for spherical cap)
+        function riseVelocity(diameter) {
+            // For mm-sized bubbles in liquid Al, ~ 0.2-0.4 m/s
+            const sigma = 0.87; // N/m surface tension liquid Al
+            const r = diameter / 2;
+            // Mendelson: v = sqrt(2*sigma/(rho*d) + g*d/2)
+            return Math.sqrt(2 * sigma / (RHO_AL * diameter) + GRAVITY * diameter / 2);
+        }
+
+        // Mass transfer coefficient (simplified Higbie penetration theory)
+        function massTransferCoeff(diameter, velocity) {
+            const D_H_Al = 4.5e-8; // m²/s diffusivity of H in liquid Al at ~720°C
+            const contactTime = diameter / velocity;
+            return 2 * Math.sqrt(D_H_Al / (Math.PI * contactTime));
+        }
+
+        // Calculate H₂ removal rate for current conditions
+        function calcRemovalRate(params, h2_current) {
+            const T_K = params.T + 273.15;
+            const KT = K0_liquid * Math.exp(-dH_liquid / (R * T_K));
+            
+            // Equilibrium partial pressure of H₂ above the melt (from Sieverts inverted)
+            // S = KT * sqrt(PH2) => PH2 = (S/KT)² in atm
+            const PH2_eq = Math.pow(h2_current / KT, 2); // atm
+            
+            // In a fresh argon bubble, PH2 ≈ 0 initially
+            // Average PH2 in bubble during rise ≈ PH2_eq * 0.3 (not reaching equilibrium)
+            const PH2_bubble_avg = PH2_eq * 0.2;
+            
+            // Driving force
+            const drivingForce = h2_current - KT * Math.sqrt(PH2_bubble_avg);
+            
+            // Number of bubbles per second
+            const V_bubble = (Math.PI / 6) * Math.pow(params.bubbleDiam, 3); // m³
+            const flowRate_m3s = params.flowRate / 1000 / 60; // m³/s
+            const P_avg = P_ATM + RHO_AL * GRAVITY * params.depth / 2;
+            const V_bubble_at_avg_P = V_bubble * P_ATM / P_avg;
+            const nBubbles = flowRate_m3s / V_bubble; // bubbles/s at injection
+            
+            // Surface area per bubble
+            const A_bubble = Math.PI * Math.pow(params.bubbleDiam, 2);
+            
+            // Total interfacial area
+            const residenceTime = params.depth / riseVelocity(params.bubbleDiam);
+            const totalArea = nBubbles * A_bubble * residenceTime; // m² average
+            
+            // Mass transfer
+            const kL = massTransferCoeff(params.bubbleDiam, riseVelocity(params.bubbleDiam));
+            
+            // Rate of H removal: kL * A * ΔC (convert ml/100g to mol/m³ for calc, then back)
+            // Simplified: rate in ml/(100g·s)
+            const removalRate = kL * totalArea * drivingForce / (params.meltMass / RHO_AL);
+            
+            return Math.max(0, removalRate);
+        }
+
+        function initDegassingPlots() {
+            const params = getDegParams();
+            
+            Plotly.newPlot('deg-h2-plot', [{
+                x: [0], y: [params.h2Start],
+                mode: 'lines', name: 'H₂ innhold',
+                line: { color: '#e74c3c', width: 3 }
+            }, {
+                x: [0, 30], y: [0.2, 0.2],
+                mode: 'lines', name: 'Krav (0,2 ml/100g)',
+                line: { color: '#f39c12', width: 2, dash: 'dot' }
+            }], {
+                title: 'Hydrogeninnhold over tid',
+                xaxis: { title: 'Tid (min)', gridcolor: '#eee' },
+                yaxis: { title: 'H₂ (ml/100g Al)', gridcolor: '#eee', range: [0, Math.max(0.5, params.h2Start * 1.1)] },
+                plot_bgcolor: 'white', paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' }, margin: { t: 40, b: 50, l: 60, r: 20 },
+                legend: { x: 0.6, y: 0.95 }
+            }, { responsive: true });
+
+            // Bubble size vs height plot
+            const heights = [];
+            const sizes = [];
+            for (let h = 0; h <= params.depth; h += params.depth / 20) {
+                heights.push(h * 100); // cm
+                sizes.push(bubbleDiamAtHeight(params.bubbleDiam, params.depth, h, 0) * 1000); // mm
+            }
+            
+            Plotly.newPlot('deg-bubble-plot', [{
+                x: heights, y: sizes,
+                mode: 'lines+markers', name: 'Boblediameter',
+                line: { color: '#3498db', width: 3 },
+                marker: { size: 6 }
+            }], {
+                title: 'Boblestørrelse vs. høyde i smelten',
+                xaxis: { title: 'Høyde fra bunn (cm)', gridcolor: '#eee' },
+                yaxis: { title: 'Boblediameter (mm)', gridcolor: '#eee' },
+                plot_bgcolor: 'white', paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' }, margin: { t: 40, b: 50, l: 60, r: 20 }
+            }, { responsive: true });
+
+            // Pressure vs depth plot
+            const depths = [];
+            const pressures_Pa = [];
+            const pressures_atm = [];
+            for (let d = 0; d <= params.depth; d += params.depth / 30) {
+                depths.push(d * 100); // cm
+                const P = P_ATM + RHO_AL * GRAVITY * d;
+                pressures_Pa.push(P);
+                pressures_atm.push(P / P_ATM);
+            }
+            
+            Plotly.newPlot('deg-pressure-plot', [{
+                x: depths, y: pressures_atm,
+                mode: 'lines+markers', name: 'Totaltrykk',
+                line: { color: '#f39c12', width: 3 },
+                marker: { size: 4 }
+            }, {
+                x: [0, params.depth * 100], y: [1, 1],
+                mode: 'lines', name: 'Atmosfærisk (1 atm)',
+                line: { color: '#95a5a6', width: 2, dash: 'dot' }
+            }], {
+                title: 'Trykk vs. dybde (metallostatisk + atmosfærisk)',
+                xaxis: { title: 'Dybde fra overflate (cm)', gridcolor: '#eee' },
+                yaxis: { title: 'Trykk (atm)', gridcolor: '#eee' },
+                plot_bgcolor: 'white', paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' }, margin: { t: 40, b: 50, l: 60, r: 20 },
+                annotations: [{
+                    x: params.depth * 100, y: (P_ATM + RHO_AL * GRAVITY * params.depth) / P_ATM,
+                    text: `${((P_ATM + RHO_AL * GRAVITY * params.depth) / P_ATM).toFixed(2)} atm`,
+                    showarrow: true, arrowhead: 2, ax: -50, ay: -20
+                }]
+            }, { responsive: true });
+
+            // Update live pressure display
+            updatePressureDisplay(params);
+        }
+
+        function updatePressureDisplay(params) {
+            const P_bottom = P_ATM + RHO_AL * GRAVITY * params.depth;
+            const P_mid = P_ATM + RHO_AL * GRAVITY * params.depth / 2;
+            const volExpansion = P_bottom / P_ATM;
+            
+            document.getElementById('deg-p-surface').innerHTML = 
+                `P<sub>overflate</sub> = ${P_ATM.toLocaleString()} Pa (1,00 atm)`;
+            document.getElementById('deg-p-mid').innerHTML = 
+                `P<sub>halvdybde</sub> = ${Math.round(P_mid).toLocaleString()} Pa (${(P_mid/P_ATM).toFixed(2)} atm)`;
+            document.getElementById('deg-p-bottom').innerHTML = 
+                `P<sub>bunn</sub> = ${Math.round(P_bottom).toLocaleString()} Pa (${(P_bottom/P_ATM).toFixed(2)} atm)`;
+            document.getElementById('deg-p-ratio').innerHTML = 
+                `Volumekspansjon bunn→topp: ${volExpansion.toFixed(2)}× (d: ×${Math.pow(volExpansion, 1/3).toFixed(2)})`;
+        }
+
+        function startDegassing() {
+            if (degRunning) return;
+            const params = getDegParams();
+            
+            if (degTime === 0) {
+                degH2Current = params.h2Start;
+                degH2History = [params.h2Start];
+                degTimeHistory = [0];
+                degBubbles = [];
+            }
+            
+            degRunning = true;
+            document.getElementById('deg-start-btn').textContent = '⏸ Pause';
+            lastFrameTime = performance.now();
+            degAnimationId = requestAnimationFrame(degAnimationLoop);
+        }
+
+        function stopDegassing() {
+            degRunning = false;
+            if (degAnimationId) cancelAnimationFrame(degAnimationId);
+            document.getElementById('deg-start-btn').textContent = '▶ Start simulering';
+        }
+
+        function resetDegassing() {
+            stopDegassing();
+            degTime = 0;
+            degRotorAngle = 0;
+            const params = getDegParams();
+            degH2Current = params.h2Start;
+            degH2History = [];
+            degTimeHistory = [];
+            degBubbles = [];
+            degH2Particles = [];
+            document.getElementById('deg-time-display').textContent = 'Tid: 0 min';
+            document.getElementById('stat-h2-in').textContent = params.h2Start.toFixed(3) + ' ml/100g';
+            document.getElementById('stat-h2-now').textContent = params.h2Start.toFixed(3) + ' ml/100g';
+            document.getElementById('stat-h2-removed').textContent = '0%';
+            document.getElementById('stat-argon').textContent = '0 L';
+            document.getElementById('stat-bubble-out').textContent = '- mm';
+            initDegassingPlots();
+            drawDegassingCanvas(params);
+        }
+
+        let lastFrameTime = 0;
+        
+        function degAnimationLoop(timestamp) {
+            if (!degRunning) return;
+            
+            const dt_real = Math.min(0.1, (timestamp - lastFrameTime) / 1000); // cap at 100ms
+            lastFrameTime = timestamp;
+            const dt_sim = dt_real * DEG_SIM_SPEED; // simulated seconds
+            
+            if (dt_sim <= 0 || isNaN(dt_sim)) {
+                degAnimationId = requestAnimationFrame(degAnimationLoop);
+                return;
+            }
+            
+            try {
+            const params = getDegParams();
+            
+            // Update H₂ content
+            const rate = calcRemovalRate(params, degH2Current);
+            degH2Current = Math.max(0.001, degH2Current - rate * dt_sim);
+            degTime += dt_sim;
+            
+            // Store history (every ~2 sim seconds)
+            if (degTimeHistory.length === 0 || (degTime / 60 - degTimeHistory[degTimeHistory.length - 1]) > 0.05) {
+                degTimeHistory.push(degTime / 60);
+                degH2History.push(degH2Current);
+            }
+            
+            // Update rotor angle
+            degRotorAngle += params.rpm * (2 * Math.PI / 60) * dt_sim;
+            
+            // Canvas melt area coordinates (used throughout)
+            const canvasMeltTop = 80;
+            const canvasMeltBottom = 480;
+            const canvasHeight = canvasMeltBottom - canvasMeltTop;
+            
+            // Spawn bubbles from rotor - distributed across vessel width
+            // Rotor shears gas into small bubbles and flings them outward
+            const tipSpeed = params.rpm * 2 * Math.PI / 60 * 0.05; // m/s at rotor tip (~5cm radius)
+            const spreadFactor = Math.min(1.0, tipSpeed / 4); // normalized spread 0-1
+            
+            // Melt vessel pixel bounds
+            const vesselLeft = 75;
+            const vesselRight = 325;
+            const vesselCenter = 200;
+            const vesselWidth = vesselRight - vesselLeft;
+            
+            // Spawn ~1 bubble every few frames to keep a steady flow visible
+            const spawnChance = 0.15; // ~15% chance per frame = several per second
+            if (Math.random() < spawnChance) {
+                // Rotor flings bubbles in all directions - spread proportional to RPM
+                // Higher RPM = more uniform distribution across vessel
+                const ejectAngle = degRotorAngle * 0.3 + Math.random() * Math.PI * 2;
+                
+                // Target x-position: at high RPM bubbles reach the walls
+                // Use combination of radial ejection + random spread
+                const radialDist = spreadFactor * (vesselWidth / 2) * (0.3 + Math.random() * 0.7);
+                const targetX = vesselCenter + Math.cos(ejectAngle) * radialDist;
+                // Clamp to vessel bounds with some margin
+                const clampedTargetX = Math.max(vesselLeft + 15, Math.min(vesselRight - 15, targetX));
+                
+                // Start position: near rotor center with slight offset
+                const startOffset = Math.cos(ejectAngle) * (10 + Math.random() * 15);
+                
+                degBubbles.push({
+                    x: vesselCenter + startOffset,
+                    y: canvasMeltBottom - 30, // at rotor level (bottom of melt)
+                    height: 0.01,
+                    wobble: Math.random() * Math.PI * 2,
+                    speed: 0.4 + Math.random() * 0.2,
+                    vx: (clampedTargetX - vesselCenter - startOffset) * 0.02,
+                    targetX: clampedTargetX,
+                    h2absorbed: 0
+                });
+            }
+            
+            // Spawn H₂ diffusion particles - ambient H atoms dispersed in melt
+            // Keep a steady population of H particles floating around
+            const meltAreaLeft = 70;
+            const meltAreaRight = 330;
+            const maxParticles = 60;
+            while (degH2Particles.length < maxParticles) {
+                degH2Particles.push({
+                    x: meltAreaLeft + Math.random() * (meltAreaRight - meltAreaLeft),
+                    y: canvasMeltTop + 20 + Math.random() * (canvasMeltBottom - canvasMeltTop - 90),
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    attracted: false, // becomes true when near a bubble
+                    life: 3 + Math.random() * 3
+                });
+            }
+            
+            // Update bubbles
+            
+            degBubbles = degBubbles.filter(b => {
+                // Slow visual rise: use 15% of physical speed for pedagogical effect
+                b.height += riseVelocity(params.bubbleDiam) * dt_sim * 0.15;
+                const frac = b.height / params.depth;
+                b.y = canvasMeltBottom - frac * canvasHeight;
+                b.wobble += dt_sim * 1.5;
+                
+                // Horizontal movement: move toward target in lower zone, then gentle drift
+                if (b.targetX !== undefined) {
+                    if (frac < 0.4) {
+                        // Strong lateral movement near rotor - spreading out
+                        b.x += (b.targetX - b.x) * dt_sim * 3;
+                    } else {
+                        // Above spread zone: gentle wobble only
+                        b.x += Math.sin(b.wobble) * 0.15;
+                    }
+                }
+                
+                // Keep within vessel bounds
+                if (b.x < 75) b.x = 75;
+                if (b.x > 325) b.x = 325;
+                
+                // Track H₂ absorption (increases as bubble rises)
+                if (b.h2absorbed !== undefined) {
+                    b.h2absorbed = Math.min(1.0, b.h2absorbed + dt_sim * 0.3);
+                }
+                
+                return b.y > canvasMeltTop - 20;
+            });
+            
+            // Bubble coalescence - merge nearby bubbles as they rise
+            for (let i = 0; i < degBubbles.length; i++) {
+                for (let j = i + 1; j < degBubbles.length; j++) {
+                    const bi = degBubbles[i];
+                    const bj = degBubbles[j];
+                    const dx = bi.x - bj.x;
+                    const dy = bi.y - bj.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const mergeThreshold = 18; // pixels
+                    
+                    // Only merge if close together and both above rotor zone
+                    const fracI = (canvasMeltBottom - bi.y) / canvasHeight;
+                    const fracJ = (canvasMeltBottom - bj.y) / canvasHeight;
+                    if (dist < mergeThreshold && fracI > 0.15 && fracJ > 0.15) {
+                        // Merge j into i (conserve volume: size^3 adds)
+                        bi.size = (bi.size || 1);
+                        bj.size = (bj.size || 1);
+                        const newSize = Math.pow(Math.pow(bi.size, 3) + Math.pow(bj.size, 3), 1/3);
+                        bi.size = newSize;
+                        bi.x = (bi.x + bj.x) / 2;
+                        bi.y = Math.min(bi.y, bj.y); // keep the higher one
+                        bi.height = Math.max(bi.height, bj.height);
+                        bi.h2absorbed = Math.max(bi.h2absorbed || 0, bj.h2absorbed || 0);
+                        bi.merged = true; // flag to show coalesced state
+                        degBubbles.splice(j, 1);
+                        j--;
+                    }
+                }
+            }
+            
+            // Update H₂ particles - float randomly, absorbed when bubble contacts them
+            degH2Particles = degH2Particles.filter(p => {
+                // Random Brownian drift in melt (no attraction to bubbles)
+                p.vx += (Math.random() - 0.5) * 0.08;
+                p.vy += (Math.random() - 0.5) * 0.08;
+                p.vx *= 0.96; // damping
+                p.vy *= 0.96;
+                
+                // Check if any bubble has come into contact with this particle
+                p.attracted = false;
+                for (const b of degBubbles) {
+                    const dx = b.x - p.x;
+                    const dy = b.y - p.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const bubR = b._drawDiam || 8;
+                    
+                    if (dist < bubR + 6) {
+                        // Bubble is touching the particle - diffuse into it
+                        // Brief "entering" phase: particle drifts slowly inward
+                        p.attracted = true;
+                        p.vx += (dx / dist) * 0.15;
+                        p.vy += (dy / dist) * 0.15;
+                        
+                        // If inside bubble, absorbed
+                        if (dist < bubR) {
+                            return false; // absorbed into argon bubble!
+                        }
+                    }
+                }
+                
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                // Keep in melt bounds
+                if (p.x < 70 || p.x > 330 || p.y < canvasMeltTop + 10 || p.y > canvasMeltBottom - 80) {
+                    return false; // respawn by being replaced
+                }
+                
+                p.life -= dt_sim * 0.1;
+                return p.life > 0;
+            });
+            
+            // Draw canvas
+            drawDegassingCanvas(params);
+            
+            // Update stats
+            const timeMin = degTime / 60;
+            document.getElementById('deg-time-display').textContent = `Tid: ${timeMin.toFixed(1)} min`;
+            document.getElementById('stat-h2-in').textContent = params.h2Start.toFixed(3) + ' ml/100g';
+            document.getElementById('stat-h2-now').textContent = degH2Current.toFixed(4) + ' ml/100g';
+            const pctRemoved = ((params.h2Start - degH2Current) / params.h2Start * 100);
+            document.getElementById('stat-h2-removed').textContent = pctRemoved.toFixed(1) + '%';
+            document.getElementById('stat-argon').textContent = (params.flowRate * timeMin).toFixed(1) + ' L';
+            const dOut = bubbleDiamAtHeight(params.bubbleDiam, params.depth, params.depth, 0) * 1000;
+            document.getElementById('stat-bubble-out').textContent = dOut.toFixed(1) + ' mm';
+            
+            // Update plots every ~500ms of real time
+            if (Math.random() < 0.03) {
+                Plotly.update('deg-h2-plot', {
+                    x: [degTimeHistory],
+                    y: [degH2History]
+                }, {}, [0]);
+            }
+            
+            } catch(e) { console.error('Degassing error:', e); }
+            
+            degAnimationId = requestAnimationFrame(degAnimationLoop);
+        }
+
+        function drawDegassingCanvas(params) {
+            const canvas = document.getElementById('degassing-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width;
+            const H = canvas.height;
+            
+            ctx.clearRect(0, 0, W, H);
+            
+            // Background - vessel walls
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, W, H);
+            
+            // Melt area
+            const meltTop = 80;
+            const meltBottom = 480;
+            const meltLeft = 60;
+            const meltRight = 340;
+            
+            // Vessel walls (refractory)
+            ctx.fillStyle = '#5d4e37';
+            ctx.fillRect(40, 50, 20, 460);
+            ctx.fillRect(340, 50, 20, 460);
+            ctx.fillRect(40, 490, 320, 30);
+            
+            // Molten aluminium (gradient from hot bottom to cooler top)
+            const meltGrad = ctx.createLinearGradient(0, meltTop, 0, meltBottom);
+            meltGrad.addColorStop(0, '#ff6b35');
+            meltGrad.addColorStop(0.3, '#ff4500');
+            meltGrad.addColorStop(1, '#cc3700');
+            ctx.fillStyle = meltGrad;
+            ctx.fillRect(meltLeft, meltTop, meltRight - meltLeft, meltBottom - meltTop);
+            
+            // Surface glow
+            ctx.fillStyle = 'rgba(255, 200, 50, 0.3)';
+            ctx.fillRect(meltLeft, meltTop, meltRight - meltLeft, 15);
+            
+            // Rotor shaft (comes from bottom through vessel floor)
+            ctx.fillStyle = '#666';
+            ctx.fillRect(196, meltBottom, 8, 40); // shaft below vessel
+            ctx.fillStyle = '#777';
+            ctx.fillRect(196, meltBottom - 25, 8, 30); // shaft inside melt to rotor
+            
+            // Rotor head position - at the bottom of the melt
+            const rotorY = meltBottom - 25;
+            const rotorCenterX = 200;
+            
+            // Rotor body (hub)
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.arc(rotorCenterX, rotorY, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Rotor blades (rotating) - flat disc with notches at bottom
+            ctx.save();
+            ctx.translate(rotorCenterX, rotorY);
+            ctx.rotate(degRotorAngle * 0.05); // visual rotation (slowed for display)
+            const numBlades = 6;
+            for (let i = 0; i < numBlades; i++) {
+                const angle = (i / numBlades) * Math.PI * 2;
+                ctx.fillStyle = '#999';
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 3);
+                ctx.lineTo(Math.cos(angle) * 35, Math.sin(angle) * 6 - 2);
+                ctx.lineTo(Math.cos(angle) * 35, Math.sin(angle) * 6 + 3);
+                ctx.lineTo(Math.cos(angle) * 8, Math.sin(angle) * 3 + 3);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+            
+            // Rotor glow/spin indicator
+            ctx.strokeStyle = `rgba(200, 200, 255, ${0.15 + 0.1 * Math.sin(degRotorAngle * 0.1)})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(rotorCenterX, rotorY, 38, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // RPM label near rotor
+            ctx.fillStyle = '#ccc';
+            ctx.font = '10px Segoe UI';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${params.rpm} RPM`, rotorCenterX + 40, rotorY);
+            
+            // Argon feed label below
+            ctx.fillStyle = '#4a9';
+            ctx.font = '10px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('Ar ↑', 200, meltBottom + 55);
+            
+            // Draw bubbles
+            degBubbles.forEach(b => {
+                const frac = Math.max(0, (meltBottom - b.y) / (meltBottom - meltTop));
+                const sizeMultiplier = b.size || 1;
+                const d0_px = params.bubbleDiam * 1000 * 2; // reduced base pixel size
+                const diam = Math.max(2, d0_px * sizeMultiplier * Math.pow(1 + frac * 0.8, 1/3) * (1 + frac * 0.25));
+                
+                // Bubble gradient (lighter center)
+                const r = Math.max(1, diam);
+                const bubGrad = ctx.createRadialGradient(b.x - r*0.2, b.y - r*0.2, 0, b.x, b.y, r);
+                if (b.merged) {
+                    // Coalesced bubbles have slightly different tint
+                    bubGrad.addColorStop(0, 'rgba(220, 240, 255, 0.9)');
+                    bubGrad.addColorStop(0.5, 'rgba(130, 200, 255, 0.75)');
+                    bubGrad.addColorStop(1, 'rgba(70, 140, 220, 0.45)');
+                } else {
+                    bubGrad.addColorStop(0, 'rgba(200, 230, 255, 0.85)');
+                    bubGrad.addColorStop(0.5, 'rgba(100, 180, 255, 0.6)');
+                    bubGrad.addColorStop(1, 'rgba(50, 120, 200, 0.35)');
+                }
+                
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = bubGrad;
+                ctx.fill();
+                ctx.strokeStyle = b.merged ? 'rgba(200, 230, 255, 0.5)' : 'rgba(255, 255, 255, 0.25)';
+                ctx.lineWidth = b.merged ? 1.5 : 1;
+                ctx.stroke();
+                
+                // Store computed diam for use in diffusion drawing
+                b._drawDiam = r;
+            });
+            
+            // Draw H₂ particles floating in the melt and diffusing into bubbles
+            degH2Particles.forEach(p => {
+                const alpha = Math.min(1, p.life / 2);
+                const size = p.attracted ? 3.5 : 2.5;
+                
+                // Outer glow
+                if (p.attracted) {
+                    // Brighter when being attracted to a bubble
+                    ctx.fillStyle = `rgba(255, 240, 50, ${alpha * 0.8})`;
+                } else {
+                    // Subtle ambient particles in melt
+                    ctx.fillStyle = `rgba(255, 220, 80, ${alpha * 0.5})`;
+                }
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Bright core
+                ctx.fillStyle = `rgba(255, 255, 200, ${alpha * (p.attracted ? 0.95 : 0.6)})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // "H" label on some
+                if (Math.random() < 0.008) {
+                    ctx.fillStyle = `rgba(255, 255, 180, ${alpha * 0.9})`;
+                    ctx.font = '9px Segoe UI';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('H', p.x, p.y - 6);
+                }
+            });
+            
+            // H₂ diffusion - show particles being absorbed into bubbles
+            degBubbles.forEach(b => {
+                const frac = Math.max(0, (meltBottom - b.y) / (meltBottom - meltTop));
+                if (frac < 0.05 || frac > 0.95) return;
+                
+                const diam = b._drawDiam || 8;
+                const h2frac = b.h2absorbed || 0;
+                
+                // Show H₂ label in bubble (gets brighter as more H₂ absorbed)
+                if (diam > 4) {
+                    ctx.fillStyle = `rgba(255, 255, 200, ${0.2 + h2frac * 0.7})`;
+                    ctx.font = `${Math.max(7, diam * 0.5)}px Segoe UI`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('H₂', b.x, b.y + 3);
+                    if (h2frac > 0.3) {
+                        ctx.font = '6px Segoe UI';
+                        ctx.fillText(`${Math.round(h2frac * 100)}%`, b.x, b.y + diam * 0.7);
+                    }
+                }
+            });
+            
+            // Labels
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('Overflate', W/2, meltTop - 10);
+            ctx.fillText('↑ H₂ ut med avgass', W/2, meltTop - 30);
+            
+            ctx.fillStyle = '#aaa';
+            ctx.font = '12px Segoe UI';
+            ctx.fillText('Argon inn (via rotor)', 200, H - 10);
+            
+            // Legend for H₂ particles
+            ctx.fillStyle = 'rgba(255, 255, 80, 0.9)';
+            ctx.font = '10px Segoe UI';
+            ctx.textAlign = 'right';
+            ctx.fillText('● = H-atom diffunderer', W - 10, meltTop + 15);
+            ctx.fillText('→ boble', W - 10, meltTop + 28);
+            
+            // Hydrogen concentration color indicator on right
+            const h2Frac = degH2Current / parseFloat(document.getElementById('deg-h2-start').value);
+            const barX = meltRight + 20;
+            const barW = 20;
+            const barH = meltBottom - meltTop;
+            
+            // Background bar
+            ctx.fillStyle = '#333';
+            ctx.fillRect(barX, meltTop, barW, barH);
+            
+            // Fill based on H₂ level
+            const fillH = barH * h2Frac;
+            const h2Grad = ctx.createLinearGradient(0, meltBottom - fillH, 0, meltBottom);
+            h2Grad.addColorStop(0, '#ff6b6b');
+            h2Grad.addColorStop(1, '#e74c3c');
+            ctx.fillStyle = h2Grad;
+            ctx.fillRect(barX, meltBottom - fillH, barW, fillH);
+            
+            // Bar label
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Segoe UI';
+            ctx.textAlign = 'left';
+            ctx.fillText('[H]', barX + 2, meltTop - 5);
+            ctx.fillText(degH2Current.toFixed(3), barX - 5, meltBottom + 15);
+            
+            // Depth scale on left with PRESSURE values
+            const P_bottom = P_ATM + RHO_AL * GRAVITY * params.depth;
+            const P_mid = P_ATM + RHO_AL * GRAVITY * params.depth / 2;
+            ctx.fillStyle = '#ffcc00';
+            ctx.font = 'bold 10px Segoe UI';
+            ctx.textAlign = 'right';
+            ctx.fillText('P = 1.00 atm', meltLeft - 5, meltTop + 5);
+            ctx.fillText(`P = ${(P_mid/P_ATM).toFixed(2)} atm`, meltLeft - 5, (meltTop + meltBottom) / 2);
+            ctx.fillText(`P = ${(P_bottom/P_ATM).toFixed(2)} atm`, meltLeft - 5, meltBottom);
+            
+            ctx.fillStyle = '#aaa';
+            ctx.font = '9px Segoe UI';
+            ctx.fillText('0 m', meltLeft - 5, meltTop + 16);
+            ctx.fillText((params.depth / 2).toFixed(1) + ' m', meltLeft - 5, (meltTop + meltBottom) / 2 + 12);
+            ctx.fillText(params.depth.toFixed(1) + ' m', meltLeft - 5, meltBottom + 12);
+            
+            // Pressure arrows (showing increasing pressure downward)
+            ctx.strokeStyle = 'rgba(255, 204, 0, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(meltLeft, meltTop);
+            ctx.lineTo(meltRight, meltTop);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(meltLeft, (meltTop + meltBottom) / 2);
+            ctx.lineTo(meltRight, (meltTop + meltBottom) / 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(meltLeft, meltBottom);
+            ctx.lineTo(meltRight, meltBottom);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Bubble size legend
+            ctx.fillStyle = 'white';
+            ctx.font = '11px Segoe UI';
+            ctx.textAlign = 'left';
+            ctx.fillText('Boble vokser', 10, 25);
+            ctx.fillText('pga. lavere trykk ↑', 10, 40);
+            
+            // Mini bubbles showing size increase
+            ctx.fillStyle = 'rgba(100, 180, 255, 0.5)';
+            ctx.beginPath(); ctx.arc(25, 58, 3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(50, 58, 5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(80, 58, 8, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#aaa';
+            ctx.font = '9px Segoe UI';
+            ctx.fillText('bunn', 15, 73);
+            ctx.fillText('topp', 70, 73);
+            
+            // Formula on canvas
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = '10px Segoe UI';
+            ctx.textAlign = 'right';
+            ctx.fillText('P(h) = Patm + ρ·g·h', W - 10, H - 10);
+            ctx.fillText(`ρ_Al = ${RHO_AL} kg/m³`, W - 10, H - 25);
+        }
+
+        // === INIT ===
+        plotIntro();
+    </script>
+</body>
+</html>
