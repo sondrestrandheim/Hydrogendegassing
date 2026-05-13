@@ -1180,8 +1180,12 @@
             const vesselCenter = 200;
             const vesselWidth = vesselRight - vesselLeft;
             
-            // Spawn ~1 bubble every few frames to keep a steady flow visible
-            const spawnChance = 0.15; // ~15% chance per frame = several per second
+            // Spawn bubbles - more smaller bubbles to maintain same total gas volume
+            // For same flow rate: number of bubbles ∝ 1/d³ (volume per bubble = πd³/6)
+            // Reference: 5mm bubble at spawnChance 0.15
+            const refDiam = 0.005; // 5mm reference
+            const volumeRatio = Math.pow(refDiam / params.bubbleDiam, 3);
+            const spawnChance = Math.min(0.8, 0.15 * volumeRatio); // scale spawn rate, cap at 0.8
             if (Math.random() < spawnChance) {
                 // Rotor flings bubbles in all directions - spread proportional to RPM
                 // Higher RPM = more uniform distribution across vessel
