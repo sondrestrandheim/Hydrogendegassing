@@ -497,7 +497,7 @@
                 <div class="control-group">
                     <label>Surface pressure (mbar):</label>
                     <input type="number" id="deg-vacuum" value="1013" min="50" max="1013" step="10">
-                    <span style="font-size:0.8rem; color:#666;">1013 = 1 atm, ~500 = ejector</span>
+                    <span style="font-size:0.8rem; color:#666;">1013 mbar = 1 atm</span>
                 </div>
             </div>
 
@@ -1159,7 +1159,7 @@
             const volExpansion = P_bottom / Ps;
             
             document.getElementById('deg-p-surface').innerHTML = 
-                `P<sub>surface</sub> = ${Math.round(Ps).toLocaleString()} Pa (${(Ps/P_ATM).toFixed(2)} atm)${Ps < P_ATM * 0.99 ? ' ⚡ VACUUM' : ''}`;
+                `P<sub>surface</sub> = ${Math.round(Ps).toLocaleString()} Pa (${(Ps/P_ATM).toFixed(2)} atm)${Ps < P_ATM * 0.99 ? '  VACUUM' : ''}`;
             document.getElementById('deg-p-mid').innerHTML = 
                 `P<sub>mid-depth</sub> = ${Math.round(P_mid).toLocaleString()} Pa (${(P_mid/P_ATM).toFixed(2)} atm)`;
             document.getElementById('deg-p-bottom').innerHTML = 
