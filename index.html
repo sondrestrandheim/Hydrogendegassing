@@ -367,24 +367,29 @@
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
                 <div class="info-box" style="margin:0;">
                     <h3>Pressure in the system</h3>
-                    <p><strong>Atmospheric pressure:</strong></p>
-                    <div class="equation">P<sub>atm</sub> = 101 325 Pa (1 atm)</div>
-                    <p style="margin-top:0.5rem;"><strong>Metallostatic pressure</strong> (pressure from the weight of liquid Al above the bubble):</p>
-                    <div class="equation">P<sub>met</sub>(h) = ρ<sub>Al</sub> · g · (H - h)</div>
-                    <p style="margin-top:0.5rem;"><strong>Total pressure at depth h from surface:</strong></p>
-                    <div class="equation">P<sub>total</sub>(h) = P<sub>atm</sub> + ρ<sub>Al</sub> · g · h</div>
-                    <p style="font-size:0.85rem; margin-top:0.5rem; color:#555;">where ρ<sub>Al</sub> = 2350 kg/m³, g = 9.81 m/s², H = melt depth</p>
-                    <p style="font-size:0.85rem; color:#555;"><strong>Example:</strong> At 0.8 m depth: P<sub>bottom</sub> = 101 325 + 2350·9.81·0.8 = <strong>119 770 Pa</strong> (1.18 atm)</p>
+                    <p><strong>Surface pressure (atmospheric or vacuum):</strong></p>
+                    <div class="equation">P<sub>surface</sub> = P<sub>atm</sub> or lower (with ejector/vacuum)</div>
+                    <p style="font-size:0.85rem; color:#555;">Normal: 1013 mbar (1 atm). With ejector: ~400–600 mbar. Strong vacuum: &lt;200 mbar.</p>
+                    <p style="margin-top:0.5rem;"><strong>Metallostatic pressure</strong> (from liquid Al above the bubble):</p>
+                    <div class="equation">P<sub>met</sub>(h) = ρ<sub>Al</sub> · g · h</div>
+                    <p style="margin-top:0.5rem;"><strong>Total pressure at depth h:</strong></p>
+                    <div class="equation">P<sub>total</sub>(h) = P<sub>surface</sub> + ρ<sub>Al</sub> · g · h</div>
+                    <p style="font-size:0.85rem; margin-top:0.5rem; color:#555;">ρ<sub>Al</sub> = 2350 kg/m³, g = 9.81 m/s²</p>
+                    <p style="font-size:0.85rem; color:#555;"><strong>Example:</strong> At 0.8 m depth, 1 atm: P<sub>bottom</sub> = 101 325 + 18 445 = <strong>119 770 Pa</strong></p>
+                    <p style="font-size:0.85rem; color:#555;"><strong>Example with ejector (500 mbar):</strong> P<sub>bottom</sub> = 50 000 + 18 445 = <strong>68 445 Pa</strong></p>
                 </div>
                 <div class="info-box" style="margin:0;">
                     <h3>Bubble expansion & mass transport</h3>
                     <p><strong>Ideal gas law → bubble volume expands:</strong></p>
                     <div class="equation">V(h) = V₀ · P<sub>bunn</sub> / P(h)</div>
                     <div class="equation">d(h) = d₀ · (P<sub>bunn</sub> / P(h))<sup>1/3</sup></div>
+                    <p style="font-size:0.85rem; margin-top:0.3rem; color:#555;">With vacuum, P<sub>surface</sub> is much lower → larger P<sub>bunn</sub>/P<sub>surface</sub> ratio → bubbles expand more → more surface area for H₂ transfer.</p>
                     <p style="margin-top:0.5rem;"><strong>Driving force for H₂ transport into bubble:</strong></p>
                     <div class="equation">ΔC = [H]<sub>melt</sub> − K<sub>T</sub>·√P<sub>H₂,bubble</sub></div>
                     <p style="font-size:0.85rem; margin-top:0.5rem; color:#555;">Fresh argon bubble: P<sub>H₂</sub> ≈ 0 → large driving force.<br>
                     As the bubble absorbs H₂, P<sub>H₂</sub> in the bubble increases and the driving force decreases.</p>
+                    <p style="margin-top:0.5rem;"><strong>Vacuum effect on driving force:</strong></p>
+                    <p style="font-size:0.85rem; color:#555;">Lower P<sub>surface</sub> → lower equilibrium [H] (Sievert: S ∝ √P). This increases ΔC, making degassing faster. This is the <strong>dominant effect</strong> of vacuum treatment.</p>
                     <p style="margin-top:0.5rem;"><strong>Rise velocity (Mendelson):</strong></p>
                     <div class="equation">v = √(2σ/(ρ·d) + g·d/2)</div>
                     <p style="font-size:0.85rem; color:#555;">σ = 0.87 N/m (surface tension of liquid Al)</p>
@@ -409,6 +414,13 @@
                 </ul>
                 <div class="equation">A<sub>total</sub> = n × π(d/n<sup>1/3</sup>)² = n<sup>1/3</sup> × πd²</div>
                 <p style="margin-top:0.5rem;">So splitting 1 bubble into <strong>1000 bubbles</strong> gives <strong>10× more surface area</strong> for the same gas volume. Additionally, smaller bubbles rise slower (longer contact time) and have a higher surface-to-volume ratio, both improving hydrogen removal efficiency.</p>
+                <p style="margin-top:0.8rem;"><strong>Rotor speed and bubble size:</strong> In practice, the rotor RPM is the main way to control bubble size. A faster spinning rotor shears the argon into finer bubbles through higher tip speed and turbulent breakup. Typical relationships:</p>
+                <ul style="margin:0.3rem 0 0 1.5rem; font-size:0.9rem;">
+                    <li><strong>Low RPM (~200–400):</strong> Large bubbles, 10–20 mm — poor degassing</li>
+                    <li><strong>Medium RPM (~500–700):</strong> 3–8 mm — good for most applications</li>
+                    <li><strong>High RPM (~800–1200):</strong> 1–3 mm — excellent degassing, but higher dross generation and energy use</li>
+                </ul>
+                <p style="margin-top:0.3rem; font-size:0.85rem; color:#555;">In the simulation, adjust the <em>bubble start diameter</em> to represent the effect of different rotor speeds.</p>
             </div>
 
             <!-- Mass transfer coefficient explanation -->
@@ -480,10 +492,7 @@
                 <div class="control-group">
                     <label>Bubble start diameter (mm):</label>
                     <input type="number" id="deg-bubble-d" value="5" min="1" max="20" step="1">
-                </div>
-                <div class="control-group">
-                    <label>Rotor RPM:</label>
-                    <input type="number" id="deg-rpm" value="700" min="100" max="1500" step="50">
+                    <span style="font-size:0.8rem; color:#666;">Higher rotor RPM → smaller bubbles</span>
                 </div>
                 <div class="control-group">
                     <label>Surface pressure (mbar):</label>
@@ -978,7 +987,7 @@
                 meltMass: parseFloat(document.getElementById('deg-mass').value), // kg
                 depth: parseFloat(document.getElementById('deg-depth').value), // m
                 bubbleDiam: parseFloat(document.getElementById('deg-bubble-d').value) / 1000, // m
-                rpm: parseFloat(document.getElementById('deg-rpm').value),
+                rpm: 700, // fixed for animation (rotor effect is captured via bubble diameter)
                 P_surface: P_mbar * 100 // convert mbar to Pa
             };
         }
@@ -1533,7 +1542,7 @@
             ctx.fillStyle = '#ccc';
             ctx.font = '10px Segoe UI';
             ctx.textAlign = 'left';
-            ctx.fillText(`${params.rpm} RPM`, rotorCenterX + 40, rotorY);
+            ctx.fillText('Rotor', rotorCenterX + 40, rotorY);
             
             // Argon feed label below
             ctx.fillStyle = '#4a9';
@@ -1632,7 +1641,7 @@
             ctx.font = '14px Segoe UI';
             ctx.textAlign = 'center';
             ctx.fillText('Surface', W/2, meltTop - 10);
-            ctx.fillText('↑ H₂ exits with off-gas', W/2, meltTop - 30);
+            ctx.fillText('↑ H₂ exits with argon', W/2, meltTop - 30);
             
             ctx.fillStyle = '#aaa';
             ctx.font = '12px Segoe UI';
