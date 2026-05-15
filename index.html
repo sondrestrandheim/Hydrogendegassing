@@ -411,7 +411,51 @@
                 <p style="margin-top:0.5rem;">So splitting 1 bubble into <strong>1000 bubbles</strong> gives <strong>10× more surface area</strong> for the same gas volume. Additionally, smaller bubbles rise slower (longer contact time) and have a higher surface-to-volume ratio, both improving hydrogen removal efficiency.</p>
             </div>
 
-            
+            <!-- Mass transfer coefficient explanation -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+                <div class="info-box" style="margin:0;">
+                    <h3>Mass transfer coefficient k<sub>L</sub></h3>
+                    <p>The rate of hydrogen transfer from melt to bubble depends on the <strong>mass transfer coefficient</strong> k<sub>L</sub>, calculated using <strong>Higbie penetration theory</strong> (1935):</p>
+                    <div class="equation">k<sub>L</sub> = 2 · √(D<sub>H,Al</sub> / (π · t<sub>c</sub>))</div>
+                    <p style="margin-top:0.5rem;">where:</p>
+                    <ul style="margin:0.3rem 0 0.3rem 1.5rem; font-size:0.9rem;">
+                        <li><strong>D<sub>H,Al</sub></strong> = diffusivity of hydrogen in liquid Al (m²/s)</li>
+                        <li><strong>t<sub>c</sub></strong> = contact time = d / v (bubble diameter / rise velocity)</li>
+                    </ul>
+                    <p style="margin-top:0.5rem; font-size:0.85rem; color:#555;">The idea: a fresh "element" of melt contacts the bubble surface. During the short contact time t<sub>c</sub>, hydrogen diffuses into the bubble. A smaller bubble has shorter contact time but there are many more of them with much more total surface area — the net effect is that smaller bubbles give faster degassing.</p>
+                    <p style="margin-top:0.5rem;"><strong>Key insight:</strong> k<sub>L</sub> ∝ √(D · v / d), so both diffusivity <em>and</em> bubble size matter.</p>
+                </div>
+                <div class="info-box" style="margin:0;">
+                    <h3>Diffusivity D<sub>H,Al</sub>(T)</h3>
+                    <p>The diffusion coefficient of hydrogen in liquid aluminium follows an <strong>Arrhenius relationship</strong> (Eichenauer et al.):</p>
+                    <div class="equation">D<sub>H,Al</sub>(T) = D₀ · exp(−E<sub>a</sub> / RT)</div>
+                    <p style="margin-top:0.5rem;"><strong>Constants:</strong></p>
+                    <table style="width:100%; border-collapse:collapse; margin-top:0.3rem; font-size:0.9rem;">
+                        <tr style="background:#eee"><th style="padding:0.3rem; text-align:left;">Parameter</th><th>Value</th></tr>
+                        <tr><td style="padding:0.3rem;">D₀</td><td style="text-align:center">2.9 × 10⁻⁶ m²/s</td></tr>
+                        <tr><td style="padding:0.3rem;">E<sub>a</sub></td><td style="text-align:center">25 500 J/mol</td></tr>
+                    </table>
+                    <p style="margin-top:0.5rem;"><strong>Result at different temperatures:</strong></p>
+                    <table style="width:100%; border-collapse:collapse; margin-top:0.3rem; font-size:0.9rem;">
+                        <tr style="background:#eee"><th style="padding:0.3rem;">T (°C)</th><th>D<sub>H,Al</sub> (m²/s)</th><th>Relative</th></tr>
+                        <tr><td style="padding:0.3rem;">660</td><td style="text-align:center">3.1 × 10⁻⁸</td><td style="text-align:center; color:#3498db;">0.72×</td></tr>
+                        <tr><td style="padding:0.3rem;">720</td><td style="text-align:center">4.3 × 10⁻⁸</td><td style="text-align:center; color:#555;">1.00×</td></tr>
+                        <tr><td style="padding:0.3rem;">800</td><td style="text-align:center">6.5 × 10⁻⁸</td><td style="text-align:center; color:#e67e22;">1.51×</td></tr>
+                        <tr><td style="padding:0.3rem;">900</td><td style="text-align:center">1.0 × 10⁻⁷</td><td style="text-align:center; color:#e74c3c;">2.33×</td></tr>
+                    </table>
+                    <p style="margin-top:0.5rem; font-size:0.85rem; color:#555;"><strong>Effect:</strong> Since k<sub>L</sub> ∝ √D, a temperature increase from 660→900°C increases k<sub>L</sub> by ~53%. But beware: higher T also means higher equilibrium solubility (more H₂ dissolves from ambient moisture).</p>
+                </div>
+            </div>
+
+            <!-- Live k_L calculation display -->
+            <div id="deg-kl-display" style="background:#e8f6e8; padding:1rem 1.5rem; border-radius:8px; margin-bottom:1.5rem; font-size:0.95rem; border-left:4px solid #27ae60;">
+                <strong>Live calculation for selected parameters:</strong><br>
+                <span id="deg-kl-diff">D<sub>H,Al</sub> = — m²/s</span> &nbsp;|&nbsp;
+                <span id="deg-kl-vel">v<sub>rise</sub> = — m/s</span> &nbsp;|&nbsp;
+                <span id="deg-kl-tc">t<sub>c</sub> = — ms</span> &nbsp;|&nbsp;
+                <span id="deg-kl-val">k<sub>L</sub> = — m/s</span>
+            </div>
+
             <div class="controls">
                 <div class="control-group">
                     <label>Melt temperature (°C):</label>
@@ -440,6 +484,11 @@
                 <div class="control-group">
                     <label>Rotor RPM:</label>
                     <input type="number" id="deg-rpm" value="700" min="100" max="1500" step="50">
+                </div>
+                <div class="control-group">
+                    <label>Surface pressure (mbar):</label>
+                    <input type="number" id="deg-vacuum" value="1013" min="50" max="1013" step="10">
+                    <span style="font-size:0.8rem; color:#666;">1013 = 1 atm, ~500 = ejector</span>
                 </div>
             </div>
 
@@ -921,6 +970,7 @@
         let degH2Particles = []; // small H₂ particles showing diffusion
 
         function getDegParams() {
+            const P_mbar = parseFloat(document.getElementById('deg-vacuum').value);
             return {
                 T: parseFloat(document.getElementById('deg-temp').value),
                 h2Start: parseFloat(document.getElementById('deg-h2-start').value),
@@ -928,14 +978,16 @@
                 meltMass: parseFloat(document.getElementById('deg-mass').value), // kg
                 depth: parseFloat(document.getElementById('deg-depth').value), // m
                 bubbleDiam: parseFloat(document.getElementById('deg-bubble-d').value) / 1000, // m
-                rpm: parseFloat(document.getElementById('deg-rpm').value)
+                rpm: parseFloat(document.getElementById('deg-rpm').value),
+                P_surface: P_mbar * 100 // convert mbar to Pa
             };
         }
 
         // Calculate bubble diameter at height h from bottom (expansion due to pressure)
-        function bubbleDiamAtHeight(d0, depth, h, pH2_in_bubble) {
-            const P_bottom = P_ATM + RHO_AL * GRAVITY * depth;
-            const P_at_h = P_ATM + RHO_AL * GRAVITY * (depth - h);
+        function bubbleDiamAtHeight(d0, depth, h, pH2_in_bubble, P_surf) {
+            const Ps = P_surf || P_ATM;
+            const P_bottom = Ps + RHO_AL * GRAVITY * depth;
+            const P_at_h = Ps + RHO_AL * GRAVITY * (depth - h);
             // Volume expands: V ∝ P_bottom/P_at_h, plus extra from H2 absorbed
             const volumeRatio = P_bottom / P_at_h;
             return d0 * Math.pow(volumeRatio, 1/3);
@@ -950,9 +1002,17 @@
             return Math.sqrt(2 * sigma / (RHO_AL * diameter) + GRAVITY * diameter / 2);
         }
 
+        // Diffusivity of H in liquid Al (Arrhenius, Eichenauer et al.)
+        function diffusivityH(T_celsius) {
+            const D0 = 2.9e-6;    // m²/s
+            const Ea = 25500;      // J/mol
+            const T = T_celsius + 273.15;
+            return D0 * Math.exp(-Ea / (R * T));
+        }
+
         // Mass transfer coefficient (simplified Higbie penetration theory)
-        function massTransferCoeff(diameter, velocity) {
-            const D_H_Al = 4.5e-8; // m²/s diffusivity of H in liquid Al at ~720°C
+        function massTransferCoeff(diameter, velocity, T_celsius) {
+            const D_H_Al = diffusivityH(T_celsius);
             const contactTime = diameter / velocity;
             return 2 * Math.sqrt(D_H_Al / (Math.PI * contactTime));
         }
@@ -974,10 +1034,11 @@
             const drivingForce = h2_current - KT * Math.sqrt(PH2_bubble_avg);
             
             // Number of bubbles per second
+            const Ps = params.P_surface || P_ATM;
             const V_bubble = (Math.PI / 6) * Math.pow(params.bubbleDiam, 3); // m³
             const flowRate_m3s = params.flowRate / 1000 / 60; // m³/s
-            const P_avg = P_ATM + RHO_AL * GRAVITY * params.depth / 2;
-            const V_bubble_at_avg_P = V_bubble * P_ATM / P_avg;
+            const P_avg = Ps + RHO_AL * GRAVITY * params.depth / 2;
+            const V_bubble_at_avg_P = V_bubble * Ps / P_avg;
             const nBubbles = flowRate_m3s / V_bubble; // bubbles/s at injection
             
             // Surface area per bubble
@@ -988,7 +1049,7 @@
             const totalArea = nBubbles * A_bubble * residenceTime; // m² average
             
             // Mass transfer
-            const kL = massTransferCoeff(params.bubbleDiam, riseVelocity(params.bubbleDiam));
+            const kL = massTransferCoeff(params.bubbleDiam, riseVelocity(params.bubbleDiam), params.T);
             
             // Rate of H removal: kL * A * ΔC (convert ml/100g to mol/m³ for calc, then back)
             // Simplified: rate in ml/(100g·s)
@@ -1022,7 +1083,7 @@
             const sizes = [];
             for (let h = 0; h <= params.depth; h += params.depth / 20) {
                 heights.push(h * 100); // cm
-                sizes.push(bubbleDiamAtHeight(params.bubbleDiam, params.depth, h, 0) * 1000); // mm
+                sizes.push(bubbleDiamAtHeight(params.bubbleDiam, params.depth, h, 0, params.P_surface) * 1000); // mm
             }
             
             Plotly.newPlot('deg-bubble-plot', [{
@@ -1039,12 +1100,13 @@
             }, { responsive: true });
 
             // Pressure vs depth plot
+            const Ps = params.P_surface || P_ATM;
             const depths = [];
             const pressures_Pa = [];
             const pressures_atm = [];
             for (let d = 0; d <= params.depth; d += params.depth / 30) {
                 depths.push(d * 100); // cm
-                const P = P_ATM + RHO_AL * GRAVITY * d;
+                const P = Ps + RHO_AL * GRAVITY * d;
                 pressures_Pa.push(P);
                 pressures_atm.push(P / P_ATM);
             }
@@ -1058,36 +1120,59 @@
                 x: [0, params.depth * 100], y: [1, 1],
                 mode: 'lines', name: 'Atmospheric (1 atm)',
                 line: { color: '#95a5a6', width: 2, dash: 'dot' }
+            }, {
+                x: [0, params.depth * 100], y: [Ps / P_ATM, Ps / P_ATM],
+                mode: 'lines', name: `Surface pressure (${(Ps/100).toFixed(0)} mbar)`,
+                line: { color: '#e74c3c', width: 2, dash: 'dash' },
+                visible: Ps < P_ATM * 0.99 ? true : 'legendonly'
             }], {
-                title: 'Pressure vs. depth (metallostatic + atmospheric)',
+                title: 'Pressure vs. depth (metallostatic + surface)',
                 xaxis: { title: 'Depth from surface (cm)', gridcolor: '#eee' },
                 yaxis: { title: 'Pressure (atm)', gridcolor: '#eee' },
                 plot_bgcolor: 'white', paper_bgcolor: 'white',
                 font: { family: 'Segoe UI' }, margin: { t: 40, b: 50, l: 60, r: 20 },
                 annotations: [{
-                    x: params.depth * 100, y: (P_ATM + RHO_AL * GRAVITY * params.depth) / P_ATM,
-                    text: `${((P_ATM + RHO_AL * GRAVITY * params.depth) / P_ATM).toFixed(2)} atm`,
+                    x: params.depth * 100, y: (Ps + RHO_AL * GRAVITY * params.depth) / P_ATM,
+                    text: `${((Ps + RHO_AL * GRAVITY * params.depth) / P_ATM).toFixed(2)} atm`,
                     showarrow: true, arrowhead: 2, ax: -50, ay: -20
                 }]
             }, { responsive: true });
 
             // Update live pressure display
             updatePressureDisplay(params);
+            updateKLDisplay(params);
         }
 
         function updatePressureDisplay(params) {
-            const P_bottom = P_ATM + RHO_AL * GRAVITY * params.depth;
-            const P_mid = P_ATM + RHO_AL * GRAVITY * params.depth / 2;
-            const volExpansion = P_bottom / P_ATM;
+            const Ps = params.P_surface || P_ATM;
+            const P_bottom = Ps + RHO_AL * GRAVITY * params.depth;
+            const P_mid = Ps + RHO_AL * GRAVITY * params.depth / 2;
+            const volExpansion = P_bottom / Ps;
             
             document.getElementById('deg-p-surface').innerHTML = 
-                `P<sub>surface</sub> = ${P_ATM.toLocaleString()} Pa (1.00 atm)`;
+                `P<sub>surface</sub> = ${Math.round(Ps).toLocaleString()} Pa (${(Ps/P_ATM).toFixed(2)} atm)${Ps < P_ATM * 0.99 ? ' ⚡ VACUUM' : ''}`;
             document.getElementById('deg-p-mid').innerHTML = 
                 `P<sub>mid-depth</sub> = ${Math.round(P_mid).toLocaleString()} Pa (${(P_mid/P_ATM).toFixed(2)} atm)`;
             document.getElementById('deg-p-bottom').innerHTML = 
                 `P<sub>bottom</sub> = ${Math.round(P_bottom).toLocaleString()} Pa (${(P_bottom/P_ATM).toFixed(2)} atm)`;
             document.getElementById('deg-p-ratio').innerHTML = 
                 `Volume expansion bottom→top: ${volExpansion.toFixed(2)}× (d: ×${Math.pow(volExpansion, 1/3).toFixed(2)})`;
+        }
+
+        function updateKLDisplay(params) {
+            const D = diffusivityH(params.T);
+            const v = riseVelocity(params.bubbleDiam);
+            const tc = params.bubbleDiam / v;
+            const kL = massTransferCoeff(params.bubbleDiam, v, params.T);
+            
+            document.getElementById('deg-kl-diff').innerHTML = 
+                `D<sub>H,Al</sub>(${params.T}°C) = ${D.toExponential(2)} m²/s`;
+            document.getElementById('deg-kl-vel').innerHTML = 
+                `v<sub>rise</sub> = ${v.toFixed(3)} m/s`;
+            document.getElementById('deg-kl-tc').innerHTML = 
+                `t<sub>c</sub> = ${(tc * 1000).toFixed(1)} ms`;
+            document.getElementById('deg-kl-val').innerHTML = 
+                `k<sub>L</sub> = ${kL.toExponential(2)} m/s = ${(kL * 1000).toFixed(2)} mm/s`;
         }
 
         function startDegassing() {
@@ -1350,7 +1435,7 @@
             const pctRemoved = ((params.h2Start - degH2Current) / params.h2Start * 100);
             document.getElementById('stat-h2-removed').textContent = pctRemoved.toFixed(1) + '%';
             document.getElementById('stat-argon').textContent = (params.flowRate * timeMin).toFixed(1) + ' L';
-            const dOut = bubbleDiamAtHeight(params.bubbleDiam, params.depth, params.depth, 0) * 1000;
+            const dOut = bubbleDiamAtHeight(params.bubbleDiam, params.depth, params.depth, 0, params.P_surface) * 1000;
             document.getElementById('stat-bubble-out').textContent = dOut.toFixed(1) + ' mm';
             
             // Update plots every ~500ms of real time
@@ -1586,12 +1671,13 @@
             ctx.fillText(degH2Current.toFixed(3), barX - 5, meltBottom + 15);
             
             // Depth scale on left with PRESSURE values
-            const P_bottom = P_ATM + RHO_AL * GRAVITY * params.depth;
-            const P_mid = P_ATM + RHO_AL * GRAVITY * params.depth / 2;
-            ctx.fillStyle = '#ffcc00';
+            const Ps = params.P_surface || P_ATM;
+            const P_bottom = Ps + RHO_AL * GRAVITY * params.depth;
+            const P_mid = Ps + RHO_AL * GRAVITY * params.depth / 2;
+            ctx.fillStyle = Ps < P_ATM * 0.99 ? '#ff6b6b' : '#ffcc00';
             ctx.font = 'bold 10px Segoe UI';
             ctx.textAlign = 'right';
-            ctx.fillText('P = 1.00 atm', meltLeft - 5, meltTop + 5);
+            ctx.fillText(`P = ${(Ps/P_ATM).toFixed(2)} atm${Ps < P_ATM * 0.99 ? ' ⚡' : ''}`, meltLeft - 5, meltTop + 5);
             ctx.fillText(`P = ${(P_mid/P_ATM).toFixed(2)} atm`, meltLeft - 5, (meltTop + meltBottom) / 2);
             ctx.fillText(`P = ${(P_bottom/P_ATM).toFixed(2)} atm`, meltLeft - 5, meltBottom);
             
