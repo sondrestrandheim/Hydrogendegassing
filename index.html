@@ -305,8 +305,9 @@
         <div id="tab-alloys" class="tab-content">
             <div class="info-box">
                 <h3>Alloy effect on solubility</h3>
-                <p>Alloying elements affect hydrogen solubility through the correction factor C<sub>alloy</sub>:</p>
-                <div class="equation">C<sub>alloy</sub> = ∏(1 + e<sub>i</sub>·wt%<sub>i</sub> + r<sub>i</sub>·wt%<sub>i</sub>²)</div>
+                <p>Alloying elements affect hydrogen solubility through the correction factor C<sub>alloy</sub> (Sigworth [3]):</p>
+                <div class="equation">C<sub>alloy</sub> = 10<sup>−Σe<sub>i</sub>·wt%<sub>i</sub> − Σr<sub>i</sub>·wt%<sub>i</sub>²</sup></div>
+                <p style="font-size:0.85rem; color:#555; margin-top:0.3rem;">Positive e → decreases solubility (C &lt; 1). Negative e → increases solubility (C &gt; 1).</p>
             </div>
             <div class="controls">
                 <div class="control-group">
@@ -329,16 +330,25 @@
                     <label>Fe (wt%): <span class="slider-value" id="fe-val">0</span></label>
                     <input type="range" id="fe-slider" min="0" max="1" step="0.1" value="0" oninput="updateAlloyPlot()">
                 </div>
+                <div class="control-group">
+                    <label>Zn (wt%): <span class="slider-value" id="zn-val">0</span></label>
+                    <input type="range" id="zn-slider" min="0" max="8" step="0.5" value="0" oninput="updateAlloyPlot()">
+                </div>
+                <div class="control-group">
+                    <label>Ti (wt%): <span class="slider-value" id="ti-val">0</span></label>
+                    <input type="range" id="ti-slider" min="0" max="0.3" step="0.01" value="0" oninput="updateAlloyPlot()">
+                </div>
             </div>
             <div id="alloy-plot" class="plot-container"></div>
             <div class="info-box" style="margin-top:1rem;">
                 <h3>Common alloys (approximate composition)</h3>
                 <p>
-                    <button onclick="setAlloy(0,0,0,0,0)" class="alloy-btn">Pure Al</button>
-                    <button onclick="setAlloy(0.6,1.0,0,0,0.2)" class="alloy-btn">6063 (Si:0.6, Mg:1.0)</button>
-                    <button onclick="setAlloy(0.4,0.5,0.15,0,0.2)" class="alloy-btn">6060 (Si:0.4, Mg:0.5)</button>
-                    <button onclick="setAlloy(9,0.3,0.3,3.5,0.8)" class="alloy-btn">A380 (Si:9, Cu:3.5)</button>
-                    <button onclick="setAlloy(0.2,4.5,0.5,0,0.2)" class="alloy-btn">5083 (Mg:4.5)</button>
+                    <button onclick="setAlloy(0,0,0,0,0,0,0)" class="alloy-btn">Pure Al</button>
+                    <button onclick="setAlloy(0.6,1.0,0.15,0,0.2,0,0.01)" class="alloy-btn">6063 (Si:0.6, Mg:1.0)</button>
+                    <button onclick="setAlloy(0.4,0.5,0.15,0,0.2,0,0.01)" class="alloy-btn">6060 (Si:0.4, Mg:0.5)</button>
+                    <button onclick="setAlloy(9,0.3,0.3,3.5,0.8,0,0)" class="alloy-btn">A380 (Si:9, Cu:3.5)</button>
+                    <button onclick="setAlloy(0.2,4.5,0.5,0,0.2,0,0.02)" class="alloy-btn">5083 (Mg:4.5)</button>
+                    <button onclick="setAlloy(0.2,2.5,0.1,1.6,0.2,5.6,0.02)" class="alloy-btn">7075 (Zn:5.6, Mg:2.5, Cu:1.6)</button>
                 </p>
                 <style>
                     .alloy-btn {
@@ -584,6 +594,14 @@
                     <label>Fe (wt%):</label>
                     <input type="number" id="calc-fe" value="0" min="0" max="1" step="0.1">
                 </div>
+                <div class="control-group">
+                    <label>Zn (wt%):</label>
+                    <input type="number" id="calc-zn" value="0" min="0" max="8" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Ti (wt%):</label>
+                    <input type="number" id="calc-ti" value="0" min="0" max="0.3" step="0.01">
+                </div>
             </div>
             <button onclick="calculate()" style="padding:0.8rem 2rem; background:var(--secondary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:1.1rem; font-weight:600;">Calculate</button>
             <div id="calc-result" class="result-box" style="display:none;"></div>
@@ -602,13 +620,18 @@
         const K0_solid = 67.14;  // ml/100g
         const dH_solid = 57079;  // J/mol
         
-        // Alloy correction factors (Sigworth, 1999)
+        // Alloy correction factors — Sigworth [3], Table 2 in document
+        // Sigworth eq. (4): C_alloy = 10^(-Σe·Ci - Σr·Ci²)
+        // Positive e → element DECREASES H solubility (C < 1)
+        // Negative e → element INCREASES H solubility (C > 1)
         const alloyFactors = {
-            Si: { e: 0.03, r: -0.0008 },
-            Mg: { e: -0.01, r: 0 },
-            Mn: { e: 0.06, r: 0 },
-            Cu: { e: 0.03, r: -0.0004 },
-            Fe: { e: 0, r: 0 }
+            Si: { e:  0.03,  r: -0.0008 },  // decreases
+            Mg: { e: -0.01,  r:  0      },  // increases
+            Mn: { e:  0.06,  r:  0      },  // decreases
+            Cu: { e:  0.03,  r: -0.0004 },  // decreases
+            Fe: { e:  0,     r:  0      },  // neutral (Sigworth)
+            Zn: { e:  0.007, r:  0      },  // decreases (est. from Anyalebechi)
+            Ti: { e: -0.14,  r:  0      }   // increases (est. from Anyalebechi)
         };
 
         // === CALCULATION FUNCTIONS ===
@@ -621,20 +644,24 @@
             }
         }
 
-        function calcCalloy(si, mg, mn, cu, fe) {
-            let C = 1;
-            C *= (1 + alloyFactors.Si.e * si + alloyFactors.Si.r * si * si);
-            C *= (1 + alloyFactors.Mg.e * mg + alloyFactors.Mg.r * mg * mg);
-            C *= (1 + alloyFactors.Mn.e * mn + alloyFactors.Mn.r * mn * mn);
-            C *= (1 + alloyFactors.Cu.e * cu + alloyFactors.Cu.r * cu * cu);
-            C *= (1 + alloyFactors.Fe.e * fe + alloyFactors.Fe.r * fe * fe);
-            return C;
+        function calcCalloy(si, mg, mn, cu, fe, zn, ti) {
+            zn = zn || 0;
+            ti = ti || 0;
+            // Sigworth eq. (4): C_alloy = 10^(-Σ e_i·w_i - Σ r_i·w_i²)
+            const composition = { Si: si, Mg: mg, Mn: mn, Cu: cu, Fe: fe, Zn: zn, Ti: ti };
+            let sumLinear = 0;
+            let sumQuadratic = 0;
+            for (const [element, wt] of Object.entries(composition)) {
+                sumLinear    += alloyFactors[element].e * wt;
+                sumQuadratic += alloyFactors[element].r * wt * wt;
+            }
+            return Math.pow(10, -sumLinear - sumQuadratic);
         }
 
-        function calcSolubility(T_celsius, P_atm, si, mg, mn, cu, fe) {
+        function calcSolubility(T_celsius, P_atm, si, mg, mn, cu, fe, zn, ti) {
             const phase = T_celsius >= T_melt ? 'liquid' : 'solid';
             const KT = calcKT(T_celsius, phase);
-            const Calloy = calcCalloy(si, mg, mn, cu, fe);
+            const Calloy = calcCalloy(si, mg, mn, cu, fe, zn, ti);
             return KT * Calloy * Math.sqrt(P_atm);
         }
 
@@ -853,14 +880,18 @@
             const mn = parseFloat(document.getElementById('mn-slider').value);
             const cu = parseFloat(document.getElementById('cu-slider').value);
             const fe = parseFloat(document.getElementById('fe-slider').value);
+            const zn = parseFloat(document.getElementById('zn-slider').value);
+            const ti = parseFloat(document.getElementById('ti-slider').value);
 
             document.getElementById('si-val').textContent = si;
             document.getElementById('mg-val').textContent = mg;
             document.getElementById('mn-val').textContent = mn;
             document.getElementById('cu-val').textContent = cu;
             document.getElementById('fe-val').textContent = fe;
+            document.getElementById('zn-val').textContent = zn;
+            document.getElementById('ti-val').textContent = ti;
 
-            const Calloy = calcCalloy(si, mg, mn, cu, fe);
+            const Calloy = calcCalloy(si, mg, mn, cu, fe, zn, ti);
 
             const temps_pure = [];
             const sol_pure = [];
@@ -896,12 +927,14 @@
             Plotly.newPlot('alloy-plot', data, layout, { responsive: true });
         }
 
-        function setAlloy(si, mg, mn, cu, fe) {
+        function setAlloy(si, mg, mn, cu, fe, zn, ti) {
             document.getElementById('si-slider').value = si;
             document.getElementById('mg-slider').value = mg;
             document.getElementById('mn-slider').value = mn;
             document.getElementById('cu-slider').value = cu;
             document.getElementById('fe-slider').value = fe;
+            document.getElementById('zn-slider').value = zn || 0;
+            document.getElementById('ti-slider').value = ti || 0;
             updateAlloyPlot();
         }
 
@@ -914,10 +947,12 @@
             const mn = parseFloat(document.getElementById('calc-mn').value);
             const cu = parseFloat(document.getElementById('calc-cu').value);
             const fe = parseFloat(document.getElementById('calc-fe').value);
+            const zn = parseFloat(document.getElementById('calc-zn').value);
+            const ti = parseFloat(document.getElementById('calc-ti').value);
 
             const phase = T >= T_melt ? 'liquid' : 'solid';
             const KT = calcKT(T, T >= T_melt ? 'liquid' : 'solid');
-            const Calloy = calcCalloy(si, mg, mn, cu, fe);
+            const Calloy = calcCalloy(si, mg, mn, cu, fe, zn, ti);
             const S = KT * Calloy * Math.sqrt(P);
 
             const resultDiv = document.getElementById('calc-result');
@@ -937,7 +972,7 @@
             const sol = [];
             for (let t = (T >= T_melt ? T_melt : 300); t <= (T >= T_melt ? 950 : T_melt); t += 2) {
                 temps.push(t);
-                sol.push(calcSolubility(t, P, si, mg, mn, cu, fe));
+                sol.push(calcSolubility(t, P, si, mg, mn, cu, fe, zn, ti));
             }
 
             const data = [
