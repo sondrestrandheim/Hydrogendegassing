@@ -222,7 +222,6 @@
             <button class="tab" onclick="showTab('pressure')">Pressure Effect</button>
             <button class="tab" onclick="showTab('alloys')">Alloy Effect</button>
             <button class="tab" onclick="showTab('degassing')">Degassing Simulation</button>
-            <button class="tab" onclick="showTab('calculator')">Calculator</button>
         </div>
 
         <!-- INTRO TAB -->
@@ -560,53 +559,7 @@
         </div>
 
         <!-- CALCULATOR TAB -->
-        <div id="tab-calculator" class="tab-content">
-            <div class="info-box">
-                <h3>Hydrogen solubility calculator</h3>
-                <p>Calculate the hydrogen solubility for a specific temperature, pressure, and alloy composition.</p>
-            </div>
-            <div class="controls">
-                <div class="control-group">
-                    <label>Temperature (°C):</label>
-                    <input type="number" id="calc-temp" value="720" min="400" max="1000">
-                </div>
-                <div class="control-group">
-                    <label>Pressure (atm):</label>
-                    <input type="number" id="calc-pressure" value="1.0" min="0.1" max="5" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>Si (wt%):</label>
-                    <input type="number" id="calc-si" value="0" min="0" max="13" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>Mg (wt%):</label>
-                    <input type="number" id="calc-mg" value="0" min="0" max="6" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>Mn (wt%):</label>
-                    <input type="number" id="calc-mn" value="0" min="0" max="2" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>Cu (wt%):</label>
-                    <input type="number" id="calc-cu" value="0" min="0" max="6" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>Fe (wt%):</label>
-                    <input type="number" id="calc-fe" value="0" min="0" max="1" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>Zn (wt%):</label>
-                    <input type="number" id="calc-zn" value="0" min="0" max="8" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>Ti (wt%):</label>
-                    <input type="number" id="calc-ti" value="0" min="0" max="0.3" step="0.01">
-                </div>
-            </div>
-            <button onclick="calculate()" style="padding:0.8rem 2rem; background:var(--secondary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:1.1rem; font-weight:600;">Calculate</button>
-            <div id="calc-result" class="result-box" style="display:none;"></div>
-            <div id="calc-plot" class="plot-container" style="margin-top:2rem;"></div>
-        </div>
+
     </div>
 
     <script>
@@ -938,62 +891,7 @@
             updateAlloyPlot();
         }
 
-        // === CALCULATOR ===
-        function calculate() {
-            const T = parseFloat(document.getElementById('calc-temp').value);
-            const P = parseFloat(document.getElementById('calc-pressure').value);
-            const si = parseFloat(document.getElementById('calc-si').value);
-            const mg = parseFloat(document.getElementById('calc-mg').value);
-            const mn = parseFloat(document.getElementById('calc-mn').value);
-            const cu = parseFloat(document.getElementById('calc-cu').value);
-            const fe = parseFloat(document.getElementById('calc-fe').value);
-            const zn = parseFloat(document.getElementById('calc-zn').value);
-            const ti = parseFloat(document.getElementById('calc-ti').value);
 
-            const phase = T >= T_melt ? 'liquid' : 'solid';
-            const KT = calcKT(T, T >= T_melt ? 'liquid' : 'solid');
-            const Calloy = calcCalloy(si, mg, mn, cu, fe, zn, ti);
-            const S = KT * Calloy * Math.sqrt(P);
-
-            const resultDiv = document.getElementById('calc-result');
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
-                <strong>Result:</strong><br>
-                Phase: <strong>${phase}</strong> aluminium<br>
-                K<sub>T</sub> = ${KT.toFixed(4)} ml/100g<br>
-                C<sub>alloy</sub> = ${Calloy.toFixed(4)}<br>
-                <br>
-                <strong>Hydrogen solubility: <span class="value">${S.toFixed(4)} ml H₂/100g Al</span></strong>
-                ${S > 0.2 ? '<div class="warning">⚠️ Above typical requirement (0.2 ml/100g). Degassing recommended!</div>' : '<div style="color:#27ae60; margin-top:0.5rem;">✓ Below typical requirement (0.2 ml/100g)</div>'}
-            `;
-
-            // Plot solubility curve with the current point marked
-            const temps = [];
-            const sol = [];
-            for (let t = (T >= T_melt ? T_melt : 300); t <= (T >= T_melt ? 950 : T_melt); t += 2) {
-                temps.push(t);
-                sol.push(calcSolubility(t, P, si, mg, mn, cu, fe, zn, ti));
-            }
-
-            const data = [
-                { x: temps, y: sol, name: 'Solubility', line: { color: '#3498db', width: 2 } },
-                { x: [T], y: [S], name: `Selected point (${T}°C)`, 
-                  marker: { size: 15, color: '#e74c3c', symbol: 'star' }, mode: 'markers' },
-                { x: [temps[0], temps[temps.length-1]], y: [0.2, 0.2], name: 'Typical requirement',
-                  line: { color: '#f39c12', width: 2, dash: 'dot' }, mode: 'lines' }
-            ];
-
-            const layout = {
-                title: 'Solubility with selected parameters',
-                xaxis: { title: 'Temperature (°C)', gridcolor: '#eee' },
-                yaxis: { title: 'Solubility (ml H₂/100g Al)', gridcolor: '#eee' },
-                plot_bgcolor: 'white',
-                paper_bgcolor: 'white',
-                font: { family: 'Segoe UI' }
-            };
-
-            Plotly.newPlot('calc-plot', data, layout, { responsive: true });
-        }
 
         // === DEGASSING SIMULATION ===
         let degAnimationId = null;
