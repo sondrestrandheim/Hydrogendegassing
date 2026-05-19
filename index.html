@@ -1548,23 +1548,39 @@
             ctx.arc(rotorCenterX, rotorY, 10, 0, Math.PI * 2);
             ctx.fill();
             
-            // Rotor blades (rotating) - flat disc with notches at bottom
-            ctx.save();
-            ctx.translate(rotorCenterX, rotorY);
-            ctx.rotate(degRotorAngle * 0.05); // visual rotation (slowed for display)
+            // Rotor blades (rotating in horizontal plane around vertical shaft)
+            // Viewed from the side: blades extend left/right, rotation makes them
+            // appear to move toward/away from viewer with foreshortening
             const numBlades = 6;
+            const bladeRadius = 35;
+            const bladeThickness = 4;
+            const rotAngle = degRotorAngle * 0.05; // visual rotation (slowed for display)
+            
+            // Draw blades sorted by depth (back to front)
+            const bladeAngles = [];
             for (let i = 0; i < numBlades; i++) {
-                const angle = (i / numBlades) * Math.PI * 2;
-                ctx.fillStyle = '#999';
+                const angle = rotAngle + (i / numBlades) * Math.PI * 2;
+                bladeAngles.push({ angle, depth: Math.cos(angle) });
+            }
+            bladeAngles.sort((a, b) => a.depth - b.depth); // draw back blades first
+            
+            for (const blade of bladeAngles) {
+                const angle = blade.angle;
+                // Side view: x-extent = R * sin(angle), apparent width depends on cos(angle)
+                const xTip = Math.sin(angle) * bladeRadius;
+                const apparentWidth = Math.abs(Math.cos(angle)) * 8 + 2; // foreshortening
+                const depthShade = 0.5 + 0.5 * (blade.depth * 0.5 + 0.5); // darker when further back
+                const gray = Math.round(100 + 80 * depthShade);
+                ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
+                
                 ctx.beginPath();
-                ctx.moveTo(Math.cos(angle) * 8, Math.sin(angle) * 3);
-                ctx.lineTo(Math.cos(angle) * 35, Math.sin(angle) * 6 - 2);
-                ctx.lineTo(Math.cos(angle) * 35, Math.sin(angle) * 6 + 3);
-                ctx.lineTo(Math.cos(angle) * 8, Math.sin(angle) * 3 + 3);
+                ctx.moveTo(rotorCenterX, rotorY - bladeThickness / 2);
+                ctx.lineTo(rotorCenterX + xTip, rotorY - bladeThickness / 2 - 1);
+                ctx.lineTo(rotorCenterX + xTip, rotorY + bladeThickness / 2 + 1);
+                ctx.lineTo(rotorCenterX, rotorY + bladeThickness / 2);
                 ctx.closePath();
                 ctx.fill();
             }
-            ctx.restore();
             
             // Rotor glow/spin indicator
             ctx.strokeStyle = `rgba(200, 200, 255, ${0.15 + 0.1 * Math.sin(degRotorAngle * 0.1)})`;
