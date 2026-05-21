@@ -206,6 +206,49 @@
             border-radius: 0 6px 6px 0;
             font-size: 0.9rem;
         }
+
+        .quiz-question {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--secondary);
+        }
+        .quiz-question h4 {
+            margin-bottom: 0.8rem;
+            color: var(--primary);
+        }
+        .quiz-option {
+            display: block;
+            padding: 0.5rem 0.8rem;
+            margin: 0.3rem 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .quiz-option:hover {
+            background: #eaf2f8;
+        }
+        .quiz-option input {
+            margin-right: 0.5rem;
+        }
+        .quiz-feedback {
+            margin-top: 0.6rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .quiz-correct {
+            background: #d5f5e3;
+            color: #1e8449;
+            display: block;
+        }
+        .quiz-wrong {
+            background: #fadbd8;
+            color: #922b21;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -222,6 +265,7 @@
             <button class="tab" onclick="showTab('pressure')">Pressure Effect</button>
             <button class="tab" onclick="showTab('alloys')">Alloy Effect</button>
             <button class="tab" onclick="showTab('degassing')">Degassing Simulation</button>
+            <button class="tab" onclick="showTab('quiz')">Quiz</button>
         </div>
 
         <!-- INTRO TAB -->
@@ -558,7 +602,101 @@
             </div>
         </div>
 
-        <!-- CALCULATOR TAB -->
+        <!-- QUIZ TAB -->
+        <div id="tab-quiz" class="tab-content">
+            <div class="info-box">
+                <h3>Test your knowledge</h3>
+                <p>Answer the questions below to check your understanding of hydrogen in aluminium. Click "Check answers" when you're done.</p>
+            </div>
+
+            <div id="quiz-container" style="display:flex; flex-direction:column; gap:1.5rem; margin-top:1rem;">
+                <!-- Q1 -->
+                <div class="quiz-question" data-correct="b">
+                    <h4>1. What is the main source of hydrogen in liquid aluminium?</h4>
+                    <label class="quiz-option"><input type="radio" name="q1" value="a"> Hydrogen gas in the atmosphere</label>
+                    <label class="quiz-option"><input type="radio" name="q1" value="b"> Water vapour (moisture) reacting with the melt</label>
+                    <label class="quiz-option"><input type="radio" name="q1" value="c"> Dissolved nitrogen converting to hydrogen</label>
+                    <label class="quiz-option"><input type="radio" name="q1" value="d"> Carbon dioxide decomposition</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="quiz-question" data-correct="c">
+                    <h4>2. According to Sievert's Law, how does hydrogen solubility depend on pressure?</h4>
+                    <label class="quiz-option"><input type="radio" name="q2" value="a"> Proportional to P²</label>
+                    <label class="quiz-option"><input type="radio" name="q2" value="b"> Proportional to P</label>
+                    <label class="quiz-option"><input type="radio" name="q2" value="c"> Proportional to √P</label>
+                    <label class="quiz-option"><input type="radio" name="q2" value="d"> Independent of pressure</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="quiz-question" data-correct="a">
+                    <h4>3. What happens to hydrogen solubility at the melting point?</h4>
+                    <label class="quiz-option"><input type="radio" name="q3" value="a"> It increases sharply (large jump from solid to liquid)</label>
+                    <label class="quiz-option"><input type="radio" name="q3" value="b"> It decreases slightly</label>
+                    <label class="quiz-option"><input type="radio" name="q3" value="c"> It stays the same</label>
+                    <label class="quiz-option"><input type="radio" name="q3" value="d"> It drops to zero</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="quiz-question" data-correct="b">
+                    <h4>4. Why does vacuum treatment improve degassing?</h4>
+                    <label class="quiz-option"><input type="radio" name="q4" value="a"> It increases the melt temperature</label>
+                    <label class="quiz-option"><input type="radio" name="q4" value="b"> Lower pressure reduces equilibrium solubility, increasing the driving force for H₂ removal</label>
+                    <label class="quiz-option"><input type="radio" name="q4" value="c"> It makes the bubbles smaller</label>
+                    <label class="quiz-option"><input type="radio" name="q4" value="d"> It removes oxygen from the melt</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <!-- Q5 -->
+                <div class="quiz-question" data-correct="c">
+                    <h4>5. Why are smaller argon bubbles more effective for degassing?</h4>
+                    <label class="quiz-option"><input type="radio" name="q5" value="a"> They rise faster, removing H₂ quicker</label>
+                    <label class="quiz-option"><input type="radio" name="q5" value="b"> They have higher internal pressure</label>
+                    <label class="quiz-option"><input type="radio" name="q5" value="c"> They provide much more total surface area for mass transfer</label>
+                    <label class="quiz-option"><input type="radio" name="q5" value="d"> They absorb more heat from the melt</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <!-- Q6 -->
+                <div class="quiz-question" data-correct="d">
+                    <h4>6. Which alloying element increases hydrogen solubility in aluminium?</h4>
+                    <label class="quiz-option"><input type="radio" name="q6" value="a"> Silicon (Si)</label>
+                    <label class="quiz-option"><input type="radio" name="q6" value="b"> Copper (Cu)</label>
+                    <label class="quiz-option"><input type="radio" name="q6" value="c"> Manganese (Mn)</label>
+                    <label class="quiz-option"><input type="radio" name="q6" value="d"> Magnesium (Mg)</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <!-- Q7 -->
+                <div class="quiz-question" data-correct="b">
+                    <h4>7. What is the typical hydrogen requirement for DC-cast aluminium products?</h4>
+                    <label class="quiz-option"><input type="radio" name="q7" value="a"> < 0.50 ml H₂/100g Al</label>
+                    <label class="quiz-option"><input type="radio" name="q7" value="b"> < 0.15–0.20 ml H₂/100g Al</label>
+                    <label class="quiz-option"><input type="radio" name="q7" value="c"> < 0.01 ml H₂/100g Al</label>
+                    <label class="quiz-option"><input type="radio" name="q7" value="d"> < 1.0 ml H₂/100g Al</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+
+                <!-- Q8 -->
+                <div class="quiz-question" data-correct="a">
+                    <h4>8. What causes porosity in solidified aluminium?</h4>
+                    <label class="quiz-option"><input type="radio" name="q8" value="a"> Hydrogen coming out of solution during solidification (solubility drop)</label>
+                    <label class="quiz-option"><input type="radio" name="q8" value="b"> Thermal contraction of the metal</label>
+                    <label class="quiz-option"><input type="radio" name="q8" value="c"> Oxidation of the melt surface</label>
+                    <label class="quiz-option"><input type="radio" name="q8" value="d"> Argon trapped in the casting</label>
+                    <div class="quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div style="margin-top:2rem; display:flex; gap:1rem; align-items:center;">
+                <button onclick="checkQuiz()" style="padding:0.7rem 2rem; background:var(--secondary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem; font-weight:600;">Check answers</button>
+                <button onclick="resetQuiz()" style="padding:0.7rem 2rem; background:#7f8c8d; color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">Reset</button>
+                <span id="quiz-score" style="font-size:1.2rem; font-weight:700; color:var(--primary);"></span>
+            </div>
+        </div>
 
     </div>
 
@@ -1689,6 +1827,54 @@
 
         // jaujau
         plotIntro();
+
+        // === QUIZ FUNCTIONS ===
+        const quizExplanations = {
+            q1: "Water vapour (H₂O) reacts with liquid Al: 3H₂O + 2Al → Al₂O₃ + 3H₂. The released hydrogen dissolves in the melt.",
+            q2: "Sievert's Law: S = K_T · C_alloy · √P_H₂. Solubility is proportional to the square root of hydrogen partial pressure.",
+            q3: "There is a large solubility jump at the melting point because liquid Al dissolves much more H₂ than solid Al. This drives porosity during solidification.",
+            q4: "Lower pressure reduces the equilibrium solubility (S ∝ √P), which increases the driving force ΔC for hydrogen to transfer from the melt into argon bubbles.",
+            q5: "For the same total gas volume, smaller bubbles have much greater total surface area (A ∝ n^(1/3)). More area = faster mass transfer of H₂ from melt to bubble.",
+            q6: "Magnesium has a negative interaction coefficient (e = −0.01), meaning it increases hydrogen solubility. Si, Cu, and Mn all decrease it.",
+            q7: "DC-cast products typically require < 0.15–0.20 ml H₂/100g Al to avoid porosity problems.",
+            q8: "The solubility drops sharply at the melting point. Hydrogen that was dissolved in the liquid cannot stay dissolved in the solid, so it forms gas pores."
+        };
+
+        function checkQuiz() {
+            const questions = document.querySelectorAll('.quiz-question');
+            let correct = 0;
+            let total = questions.length;
+
+            questions.forEach((q, i) => {
+                const correctAnswer = q.dataset.correct;
+                const name = `q${i + 1}`;
+                const selected = document.querySelector(`input[name="${name}"]:checked`);
+                const feedback = q.querySelector('.quiz-feedback');
+
+                if (selected && selected.value === correctAnswer) {
+                    correct++;
+                    feedback.textContent = "✓ Correct! " + quizExplanations[name];
+                    feedback.className = 'quiz-feedback quiz-correct';
+                } else {
+                    feedback.textContent = "✗ Incorrect. " + quizExplanations[name];
+                    feedback.className = 'quiz-feedback quiz-wrong';
+                }
+            });
+
+            const scoreEl = document.getElementById('quiz-score');
+            const pct = Math.round(100 * correct / total);
+            scoreEl.textContent = `Score: ${correct}/${total} (${pct}%)`;
+            scoreEl.style.color = pct >= 75 ? '#27ae60' : pct >= 50 ? '#f39c12' : '#e74c3c';
+        }
+
+        function resetQuiz() {
+            document.querySelectorAll('.quiz-question input[type="radio"]').forEach(r => r.checked = false);
+            document.querySelectorAll('.quiz-feedback').forEach(f => {
+                f.className = 'quiz-feedback';
+                f.textContent = '';
+            });
+            document.getElementById('quiz-score').textContent = '';
+        }
     </script>
 </body>
 </html>
