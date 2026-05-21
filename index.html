@@ -268,7 +268,7 @@
             <button class="tab" onclick="showTab('quiz')">Quiz</button>
         </div>
 
-        <!-- INTRO TAB -->
+        
         <div id="tab-intro" class="tab-content active">
             <div class="info-box">
                 <h3>About hydrogen in aluminium</h3>
@@ -303,7 +303,7 @@
             <div id="intro-plot" class="plot-container" style="margin-top:2rem;"></div>
         </div>
 
-        <!-- WATER VAPOUR TAB -->
+        
         <div id="tab-water" class="tab-content">
             <div class="info-box">
                 <h3>Water vapour saturation in air</h3>
@@ -312,7 +312,7 @@
             <div id="water-plot" class="plot-container"></div>
         </div>
 
-        <!-- SOLUBILITY TAB -->
+        
         <div id="tab-solubility" class="tab-content">
             <div class="info-box">
                 <h3>Hydrogen solubility vs. temperature</h3>
@@ -321,7 +321,7 @@
             <div id="solubility-plot" class="plot-container"></div>
         </div>
 
-        <!-- PRESSURE TAB -->
+        
         <div id="tab-pressure" class="tab-content">
             <div class="info-box">
                 <h3>Pressure effect on solubility</h3>
@@ -344,7 +344,7 @@
             <button onclick="updatePressurePlot()" style="margin-top:1rem; padding:0.6rem 1.5rem; background:var(--secondary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">Update plot</button>
         </div>
 
-        <!-- ALLOYS TAB -->
+        
         <div id="tab-alloys" class="tab-content">
             <div class="info-box">
                 <h3>Alloy effect on solubility</h3>
@@ -409,14 +409,14 @@
             </div>
         </div>
 
-        <!-- DEGASSING TAB -->
+        
         <div id="tab-degassing" class="tab-content">
             <div class="info-box">
                 <h3>Argon degassing simulation</h3>
                 <p>This simulation shows how argon bubbles are injected at the bottom of the melt, rise upward, and absorb hydrogen along the way. The bubbles grow due to lower hydrostatic pressure and uptake of H₂. Hydrogen is transported from the melt into the bubbles driven by the difference between equilibrium partial pressure and actual partial pressure in the bubble.</p>
             </div>
 
-            <!-- Formulas and pressure explanation -->
+            
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
                 <div class="info-box" style="margin:0;">
                     <h3>Pressure in the system</h3>
@@ -449,7 +449,7 @@
                 </div>
             </div>
 
-            <!-- Live pressure calculation -->
+            
             <div id="deg-pressure-display" style="background:#f0f4f8; padding:1rem 1.5rem; border-radius:8px; margin-bottom:1.5rem; font-size:0.95rem;">
                 <strong>Calculated pressures for selected parameters:</strong><br>
                 <span id="deg-p-surface">P<sub>surface</sub> = 101 325 Pa (1.00 atm)</span> &nbsp;|&nbsp;
@@ -476,7 +476,7 @@
                 <p style="margin-top:0.3rem; font-size:0.85rem; color:#555;">In the simulation, adjust the <em>bubble start diameter</em> to represent the effect of different rotor speeds.</p>
             </div>
 
-            <!-- Mass transfer coefficient explanation -->
+            
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
                 <div class="info-box" style="margin:0;">
                     <h3>Mass transfer coefficient k<sub>L</sub></h3>
@@ -512,7 +512,7 @@
                 </div>
             </div>
 
-            <!-- Live k_L calculation display -->
+            
             <div id="deg-kl-display" style="background:#e8f6e8; padding:1rem 1.5rem; border-radius:8px; margin-bottom:1.5rem; font-size:0.95rem; border-left:4px solid #27ae60;">
                 <strong>Live calculation for selected parameters:</strong><br>
                 <span id="deg-kl-diff">D<sub>H,Al</sub> = — m²/s</span> &nbsp;|&nbsp;
@@ -562,14 +562,14 @@
             </div>
 
             <div style="display:grid; grid-template-columns: 400px 1fr; gap:1.5rem; align-items:start;">
-                <!-- Vessel animation -->
+                
                 <div style="position:relative;">
                     <canvas id="degassing-canvas" width="400" height="550" style="border:2px solid #ccc; border-radius:8px; background:#1a1a2e;"></canvas>
                     <div style="margin-top:0.5rem; font-size:0.8rem; color:#666; text-align:center;">
                         Cross-section of degassing unit
                     </div>
                 </div>
-                <!-- Plots -->
+                
                 <div>
                     <div id="deg-h2-plot" style="width:100%; height:220px;"></div>
                     <div id="deg-bubble-plot" style="width:100%; height:220px; margin-top:0.5rem;"></div>
@@ -577,7 +577,7 @@
                 </div>
             </div>
 
-            <!-- Summary stats -->
+            
             <div id="deg-stats" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-top:1.5rem;">
                 <div style="background:#eaf2f8; padding:1rem; border-radius:8px; text-align:center;">
                     <div style="font-size:0.8rem; color:#666;">H₂ in (start)</div>
@@ -602,7 +602,7 @@
             </div>
         </div>
 
-        <!-- QUIZ TAB -->
+        
         <div id="tab-quiz" class="tab-content">
             <div class="info-box">
                 <h3>Test your knowledge</h3>
@@ -610,7 +610,7 @@
             </div>
 
             <div id="quiz-container" style="display:flex; flex-direction:column; gap:1.5rem; margin-top:1rem;">
-                <!-- Q1 -->
+                
                 <div class="quiz-question" data-correct="b">
                     <h4>1. What is the main source of hydrogen in liquid aluminium?</h4>
                     <label class="quiz-option"><input type="radio" name="q1" value="a"> Hydrogen gas in the atmosphere</label>
@@ -620,7 +620,7 @@
                     <div class="quiz-feedback"></div>
                 </div>
 
-                <!-- Q2 -->
+                
                 <div class="quiz-question" data-correct="c">
                     <h4>2. According to Sievert's Law, how does hydrogen solubility depend on pressure?</h4>
                     <label class="quiz-option"><input type="radio" name="q2" value="a"> Proportional to P²</label>
@@ -630,7 +630,7 @@
                     <div class="quiz-feedback"></div>
                 </div>
 
-                <!-- Q3 -->
+                
                 <div class="quiz-question" data-correct="a">
                     <h4>3. What happens to hydrogen solubility at the melting point?</h4>
                     <label class="quiz-option"><input type="radio" name="q3" value="a"> It increases sharply (large jump from solid to liquid)</label>
@@ -640,7 +640,7 @@
                     <div class="quiz-feedback"></div>
                 </div>
 
-                <!-- Q4 -->
+                
                 <div class="quiz-question" data-correct="b">
                     <h4>4. Why does vacuum treatment improve degassing?</h4>
                     <label class="quiz-option"><input type="radio" name="q4" value="a"> It increases the melt temperature</label>
@@ -650,7 +650,7 @@
                     <div class="quiz-feedback"></div>
                 </div>
 
-                <!-- Q5 -->
+                
                 <div class="quiz-question" data-correct="c">
                     <h4>5. Why are smaller argon bubbles more effective for degassing?</h4>
                     <label class="quiz-option"><input type="radio" name="q5" value="a"> They rise faster, removing H₂ quicker</label>
@@ -660,7 +660,7 @@
                     <div class="quiz-feedback"></div>
                 </div>
 
-                <!-- Q6 -->
+                
                 <div class="quiz-question" data-correct="d">
                     <h4>6. Which alloying element increases hydrogen solubility in aluminium?</h4>
                     <label class="quiz-option"><input type="radio" name="q6" value="a"> Silicon (Si)</label>
@@ -670,9 +670,9 @@
                     <div class="quiz-feedback"></div>
                 </div>
 
-                <!-- Q7 -->
+                
                 <div class="quiz-question" data-correct="b">
-                    <h4>7. What is the typical hydrogen requirement for DC-cast aluminium products?</h4>
+                    <h4>7. Typical requirement for DC-casting?</h4>
                     <label class="quiz-option"><input type="radio" name="q7" value="a"> < 0.50 ml H₂/100g Al</label>
                     <label class="quiz-option"><input type="radio" name="q7" value="b"> < 0.15–0.20 ml H₂/100g Al</label>
                     <label class="quiz-option"><input type="radio" name="q7" value="c"> < 0.01 ml H₂/100g Al</label>
@@ -680,7 +680,7 @@
                     <div class="quiz-feedback"></div>
                 </div>
 
-                <!-- Q8 -->
+                
                 <div class="quiz-question" data-correct="a">
                     <h4>8. What causes porosity in solidified aluminium?</h4>
                     <label class="quiz-option"><input type="radio" name="q8" value="a"> Hydrogen coming out of solution during solidification (solubility drop)</label>
@@ -701,8 +701,8 @@
     </div>
 
     <script>
-        // === CONSTANTS ===
-        const R = 8.314; // J/(mol·K)
+        // some constants :)
+        const R = 8.31400; // J/(mol·K)
         const T_melt = 660.3; // °C melting point of pure Al
         
         // Solubility constants (Anyalebechi, 2022)
@@ -711,7 +711,7 @@
         const K0_solid = 67.14;  // ml/100g
         const dH_solid = 57079;  // J/mol
         
-        // Alloy correction factors — Sigworth [3], Table 2 in document
+        // Alloy correction factors — Sigworth [3], Table 2 in document from arild's word document
         // Sigworth eq. (4): C_alloy = 10^(-Σe·Ci - Σr·Ci²)
         // Positive e → element DECREASES H solubility (C < 1)
         // Negative e → element INCREASES H solubility (C > 1)
@@ -725,7 +725,7 @@
             Ti: { e: -0.14,  r:  0      }   // increases (from Anyalebechi)
         };
 
-        // === CALCULATION FUNCTIONS ===
+        // functions for calculations
         function calcKT(T_celsius, phase) {
             const T = T_celsius + 273.15;
             if (phase === 'liquid') {
