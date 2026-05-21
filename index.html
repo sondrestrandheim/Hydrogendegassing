@@ -329,19 +329,11 @@
             </div>
             <div class="controls">
                 <div class="control-group">
-                    <label>Pressures to display (select multiple):</label>
-                    <div>
-                        <label><input type="checkbox" id="p-0.25" value="0.25"> 0.25 atm</label><br>
-                        <label><input type="checkbox" id="p-0.5" value="0.5" checked> 0.5 atm</label><br>
-                        <label><input type="checkbox" id="p-0.75" value="0.75"> 0.75 atm</label><br>
-                        <label><input type="checkbox" id="p-1.0" value="1.0" checked> 1.0 atm (sea level)</label><br>
-                        <label><input type="checkbox" id="p-1.5" value="1.5"> 1.5 atm</label><br>
-                        <label><input type="checkbox" id="p-2.0" value="2.0" checked> 2.0 atm</label>
-                    </div>
+                    <label>Pressure (atm): <span class="slider-value" id="pressure-val">1.00</span></label>
+                    <input type="range" id="pressure-slider" min="0.1" max="2.0" step="0.05" value="1.0" oninput="updatePressurePlot()">
                 </div>
             </div>
             <div id="pressure-plot" class="plot-container"></div>
-            <button onclick="updatePressurePlot()" style="margin-top:1rem; padding:0.6rem 1.5rem; background:var(--secondary); color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">Update plot</button>
         </div>
 
         
@@ -920,39 +912,42 @@
 
         // pressure effect plot
         function updatePressurePlot() {
-            const pressures = [];
-            const checkboxes = document.querySelectorAll('#tab-pressure input[type="checkbox"]');
-            checkboxes.forEach(cb => {
-                if (cb.checked) pressures.push(parseFloat(cb.value));
-            });
+            const P = parseFloat(document.getElementById('pressure-slider').value);
+            document.getElementById('pressure-val').textContent = P.toFixed(2);
 
-            const colors = ['#e74c3c', '#3498db', '#27ae60', '#f39c12', '#9b59b6', '#1abc9c'];
-            const data = [];
+            const temps_ref = [];
+            const sol_ref = [];
+            const temps_p = [];
+            const sol_p = [];
 
-            pressures.forEach((P, i) => {
-                const temps = [];
-                const sol = [];
-                for (let T = T_melt; T <= 900; T += 2) {
-                    temps.push(T);
-                    sol.push(calcKT(T, 'liquid') * Math.sqrt(P));
+            for (let T = T_melt; T <= 900; T += 2) {
+                temps_ref.push(T);
+                sol_ref.push(calcKT(T, 'liquid') * Math.sqrt(1.0));
+                temps_p.push(T);
+                sol_p.push(calcKT(T, 'liquid') * Math.sqrt(P));
+            }
+
+            const data = [
+                {
+                    x: temps_ref, y: sol_ref,
+                    name: 'P = 1.00 atm (reference)',
+                    line: { color: '#95a5a6', width: 2, dash: 'dash' }
+                },
+                {
+                    x: temps_p, y: sol_p,
+                    name: `P = ${P.toFixed(2)} atm`,
+                    line: { color: '#e74c3c', width: 3 }
+                },
+                {
+                    x: [T_melt, 900], y: [0.2, 0.2],
+                    name: 'Typical requirement (0.2 ml/100g)',
+                    line: { color: '#f39c12', width: 2, dash: 'dot' },
+                    mode: 'lines'
                 }
-                data.push({
-                    x: temps, y: sol,
-                    name: `P = ${P} atm`,
-                    line: { color: colors[i % colors.length], width: 2.5 }
-                });
-            });
-
-            // Add requirement line
-            data.push({
-                x: [T_melt, 900], y: [0.2, 0.2],
-                name: 'Typical requirement (0.2 ml/100g)',
-                line: { color: '#95a5a6', width: 2, dash: 'dot' },
-                mode: 'lines'
-            });
+            ];
 
             const layout = {
-                title: 'Hydrogen solubility in liquid pure Al at different pressures',
+                title: `Hydrogen solubility in liquid pure Al at P = ${P.toFixed(2)} atm`,
                 xaxis: { title: 'Temperature (°C)', gridcolor: '#eee' },
                 yaxis: { title: 'Solubility (ml H₂/100g Al)', gridcolor: '#eee' },
                 plot_bgcolor: 'white',
