@@ -340,7 +340,7 @@
         <div id="tab-alloys" class="tab-content">
             <div class="info-box">
                 <h3>Alloy effect on solubility</h3>
-                <p>Alloying elements affect hydrogen solubility through the correction factor C<sub>alloy</sub> (Sigworth [3]):</p>
+                <p>Alloying elements affect hydrogen solubility through the correction factor C<sub>alloy</sub> (Sigworth):</p>
                 <div class="equation">C<sub>alloy</sub> = 10<sup>−Σe<sub>i</sub>·wt%<sub>i</sub> − Σr<sub>i</sub>·wt%<sub>i</sub>²</sup></div>
                 <p style="font-size:0.85rem; color:#555; margin-top:0.3rem;">Positive e → decreases solubility (C &lt; 1). Negative e → increases solubility (C &gt; 1).</p>
             </div>
@@ -426,8 +426,8 @@
                 <div class="info-box" style="margin:0;">
                     <h3>Bubble expansion & mass transport</h3>
                     <p><strong>Ideal gas law → bubble volume expands:</strong></p>
-                    <div class="equation">V(h) = V₀ · P<sub>bunn</sub> / P(h)</div>
-                    <div class="equation">d(h) = d₀ · (P<sub>bunn</sub> / P(h))<sup>1/3</sup></div>
+                    <div class="equation">V(h) = V₀ · P<sub>bottom</sub> / P(h)</div>
+                    <div class="equation">d(h) = d₀ · (P<sub>bottom</sub> / P(h))<sup>1/3</sup></div>
                     <p style="font-size:0.85rem; margin-top:0.3rem; color:#555;">With vacuum, P<sub>surface</sub> is much lower → larger P<sub>bunn</sub>/P<sub>surface</sub> ratio → bubbles expand more → more surface area for H₂ transfer.</p>
                     <p style="margin-top:0.5rem;"><strong>Driving force for H₂ transport into bubble:</strong></p>
                     <div class="equation">ΔC = [H]<sub>melt</sub> − K<sub>T</sub>·√P<sub>H₂,bubble</sub></div>
@@ -1512,8 +1512,6 @@
             const dOut = bubbleDiamAtHeight(params.bubbleDiam, params.depth, params.depth, 0, params.P_surface) * 1000;
             document.getElementById('stat-bubble-out').textContent = dOut.toFixed(1) + ' mm';
             
-            updateKLDisplay(params);
-
             // Update plots every ~500ms of real time
             if (Math.random() < 0.03) {
                 Plotly.update('deg-h2-plot', {
@@ -1848,10 +1846,7 @@
                 const selected = document.querySelector(`input[name="${name}"]:checked`);
                 const feedback = q.querySelector('.quiz-feedback');
 
-                if (!selected) {
-                    feedback.textContent = "⚠ Not answered. " + quizExplanations[name];
-                    feedback.className = 'quiz-feedback quiz-wrong';
-                } else if (selected.value === correctAnswer) {
+                if (selected && selected.value === correctAnswer) {
                     correct++;
                     feedback.textContent = "✓ Correct! " + quizExplanations[name];
                     feedback.className = 'quiz-feedback quiz-correct';
