@@ -1512,6 +1512,8 @@
             const dOut = bubbleDiamAtHeight(params.bubbleDiam, params.depth, params.depth, 0, params.P_surface) * 1000;
             document.getElementById('stat-bubble-out').textContent = dOut.toFixed(1) + ' mm';
             
+            updateKLDisplay(params);
+
             // Update plots every ~500ms of real time
             if (Math.random() < 0.03) {
                 Plotly.update('deg-h2-plot', {
@@ -1846,7 +1848,10 @@
                 const selected = document.querySelector(`input[name="${name}"]:checked`);
                 const feedback = q.querySelector('.quiz-feedback');
 
-                if (selected && selected.value === correctAnswer) {
+                if (!selected) {
+                    feedback.textContent = "⚠ Not answered. " + quizExplanations[name];
+                    feedback.className = 'quiz-feedback quiz-wrong';
+                } else if (selected.value === correctAnswer) {
                     correct++;
                     feedback.textContent = "✓ Correct! " + quizExplanations[name];
                     feedback.className = 'quiz-feedback quiz-correct';
