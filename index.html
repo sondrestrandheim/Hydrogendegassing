@@ -703,7 +703,7 @@
         const K0_solid = 67.14;  // ml/100g
         const dH_solid = 57079;  // J/mol
         
-        // Alloy correction factors — Sigworth [3], Table 2 in document from arild's word document
+        // Alloy correction factors — Sigworth, Table 2 in document from arild's word document
         // Sigworth eq. (4): C_alloy = 10^(-Σe·Ci - Σr·Ci²)
         // Positive e → element DECREASES H solubility (C < 1)
         // Negative e → element INCREASES H solubility (C > 1)
@@ -1846,7 +1846,10 @@
                 const selected = document.querySelector(`input[name="${name}"]:checked`);
                 const feedback = q.querySelector('.quiz-feedback');
 
-                if (selected && selected.value === correctAnswer) {
+                if (!selected) {
+                    feedback.textContent = "⚠ Not answered. " + quizExplanations[name];
+                    feedback.className = 'quiz-feedback quiz-wrong';
+                } else if (selected.value === correctAnswer) {
                     correct++;
                     feedback.textContent = "✓ Correct! " + quizExplanations[name];
                     feedback.className = 'quiz-feedback quiz-correct';
