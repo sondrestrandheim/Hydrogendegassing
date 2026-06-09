@@ -484,23 +484,23 @@
                 </div>
                 <div class="info-box" style="margin:0;">
                     <h3>Diffusivity D<sub>H,Al</sub>(T)</h3>
-                    <p>The diffusion coefficient of hydrogen in liquid aluminium follows an <strong>Arrhenius relationship</strong> (Eichenauer et al.):</p>
+                    <p>The diffusion coefficient of hydrogen in liquid aluminium follows an <strong>Arrhenius relationship</strong>:</p>
                     <div class="equation">D<sub>H,Al</sub>(T) = D₀ · exp(−E<sub>a</sub> / RT)</div>
                     <p style="margin-top:0.5rem;"><strong>Constants:</strong></p>
                     <table style="width:100%; border-collapse:collapse; margin-top:0.3rem; font-size:0.9rem;">
                         <tr style="background:#eee"><th style="padding:0.3rem; text-align:left;">Parameter</th><th>Value</th></tr>
-                        <tr><td style="padding:0.3rem;">D₀</td><td style="text-align:center">2.9 × 10⁻⁶ m²/s</td></tr>
-                        <tr><td style="padding:0.3rem;">E<sub>a</sub></td><td style="text-align:center">25 500 J/mol</td></tr>
+                        <tr><td style="padding:0.3rem;">D₀</td><td style="text-align:center">1.22 × 10⁻⁴ m²/s</td></tr>
+                        <tr><td style="padding:0.3rem;">E<sub>a</sub></td><td style="text-align:center">54 000 J/mol</td></tr>
                     </table>
                     <p style="margin-top:0.5rem;"><strong>Result at different temperatures:</strong></p>
                     <table style="width:100%; border-collapse:collapse; margin-top:0.3rem; font-size:0.9rem;">
-                        <tr style="background:#eee"><th style="padding:0.3rem;">T (°C)</th><th>D<sub>H,Al</sub> (m²/s)</th><th>Relative</th></tr>
-                        <tr><td style="padding:0.3rem;">660</td><td style="text-align:center">1.08 × 10⁻⁷</td><td style="text-align:center; color:#3498db;">0.82×</td></tr>
-                        <tr><td style="padding:0.3rem;">720</td><td style="text-align:center">1.32 × 10⁻⁷</td><td style="text-align:center; color:#555;">1.00×</td></tr>
-                        <tr><td style="padding:0.3rem;">800</td><td style="text-align:center">1.66 × 10⁻⁷</td><td style="text-align:center; color:#e67e22;">1.26×</td></tr>
-                        <tr><td style="padding:0.3rem;">900</td><td style="text-align:center">2.12 × 10⁻⁷</td><td style="text-align:center; color:#e74c3c;">1.61×</td></tr>
+                        <tr style="background:#eee"><th style="padding:0.3rem;">T (°C)</th><th>D<sub>H,Al</sub> (m²/s)</th></tr>
+                        <tr><td style="padding:0.3rem;">660</td><td style="text-align:center">1.16 × 10⁻⁷</td></tr>
+                        <tr><td style="padding:0.3rem;">720</td><td style="text-align:center">1.76 × 10⁻⁷</td></tr>
+                        <tr><td style="padding:0.3rem;">800</td><td style="text-align:center">2.87 × 10⁻⁷</td></tr>
+                        <tr><td style="padding:0.3rem;">900</td><td style="text-align:center">4.81 × 10⁻⁷</td></tr>
                     </table>
-                    <p style="margin-top:0.5rem; font-size:0.85rem; color:#555;"><strong>Effect:</strong> Since k<sub>L</sub> ∝ √D, a temperature increase from 660→900°C increases k<sub>L</sub> by ~53%. But beware: higher T also means higher equilibrium solubility (more H₂ dissolves from ambient moisture).</p>
+                    <p style="margin-top:0.5rem; font-size:0.85rem; color:#555;"><strong>Effect:</strong> Since k<sub>L</sub> ∝ √D, a temperature increase from 660→900°C increases k<sub>L</sub> by ~104%. But beware: higher T also means higher equilibrium solubility (more H₂ dissolves from ambient moisture).</p>
                 </div>
             </div>
 
@@ -1079,8 +1079,8 @@
 
         // diffusivity of H in liquid Al (Arrhenius, Eichenauer et al.)
         function diffusivityH(T_celsius) {
-            const D0 = 2.9e-6;    // m²/s
-            const Ea = 25500;      // J/mol
+            const D0 = 1.22e-4;   // m²/s
+            const Ea = 54000;      // J/mol
             const T = T_celsius + 273.15;
             return D0 * Math.exp(-Ea / (R * T));
         }
