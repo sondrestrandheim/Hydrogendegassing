@@ -1077,12 +1077,18 @@
             return Math.sqrt(2 * sigma / (RHO_AL * diameter) + GRAVITY * diameter / 2);
         }
 
+        // Calibration knob for the H diffusivity (and thus mass-transfer coeff k ∝ √D).
+        // The reference spreadsheet notes "D may be reduced to match literature values of k".
+        // 1.0 = pure theoretical diffusivity. Set < 1 to slow degassing so the model
+        // matches measured kinetics / the spreadsheet; > 1 to speed it up.
+        const D_CALIBRATION = 1.0;
+
         // diffusivity of H in liquid Al (Arrhenius, Eichenauer et al.)
         function diffusivityH(T_celsius) {
             const D0 = 1.22e-4;   // m²/s
             const Ea = 54000;      // J/mol
             const T = T_celsius + 273.15;
-            return D0 * Math.exp(-Ea / (R * T));
+            return D_CALIBRATION * D0 * Math.exp(-Ea / (R * T));
         }
 
         // Mass transfer coefficient (simplified Higbie penetration theory)
