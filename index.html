@@ -1092,43 +1092,59 @@
             return 2 * Math.sqrt(D_H_Al / (Math.PI * contactTime));
         }
 
-        // Calculate H₂ removal rate for current conditions
+        // Calculate H₂ removal rate for current conditions.
+        // Dynamic driving force: a single argon bubble is marched from the bath
+        // bottom to the surface while its internal H₂ partial pressure builds up as
+        // it absorbs hydrogen (same approach as the reference spreadsheet). This
+        // replaces the earlier fixed "20 % of equilibrium" back-pressure assumption,
+        // so temperature, surface/vacuum pressure and depth now affect the rate.
         function calcRemovalRate(params, h2_current) {
             const T_K = params.T + 273.15;
-            const KT = K0_liquid * Math.exp(-dH_liquid / (R * T_K));
-            
-            // Equilibrium partial pressure of H₂ above the melt (from Sieverts inverted)
-            // S = KT * sqrt(PH2) => PH2 = (S/KT)² in atm
-            const PH2_eq = Math.pow(h2_current / KT, 2); // atm
-            
-            // In a fresh argon bubble, PH2 ≈ 0 initially
-            // Average PH2 in bubble during rise ≈ PH2_eq * 0.3 (not reaching equilibrium)
-            const PH2_bubble_avg = PH2_eq * 0.2;
-            
-            // Driving force
-            const drivingForce = h2_current - KT * Math.sqrt(PH2_bubble_avg);
-            
-            // Number of bubbles per second
-            const Ps = params.P_surface || P_ATM;
-            const V_bubble = (Math.PI / 6) * Math.pow(params.bubbleDiam, 3); // m³
-            const flowRate_m3s = params.flowRate / 1000 / 60; // m³/s
-            const P_avg = Ps + RHO_AL * GRAVITY * params.depth / 2;
-            const V_bubble_at_avg_P = V_bubble * Ps / P_avg;
-            const nBubbles = flowRate_m3s / V_bubble; // bubbles/s at injection
-            
-             // Surface area per bubble
-            const A_bubble = Math.PI * Math.pow(params.bubbleDiam, 2);
-            
-            // total interfacial area
-            const residenceTime = params.depth / riseVelocity(params.bubbleDiam);
-            const totalArea = nBubbles * A_bubble * residenceTime; // m² average
-            
-            // Mass transfer
-            const kL = massTransferCoeff(params.bubbleDiam, riseVelocity(params.bubbleDiam), params.T);
-            
-       
-            const removalRate = kL * totalArea * drivingForce / (params.meltMass / RHO_AL);
-            
+            const KT = K0_liquid * Math.exp(-dH_liquid / (R * T_K)); // Sieverts const [ml/100g @ 1 atm]
+            const Ps = params.P_surface || P_ATM;                    // surface/vacuum pressure [Pa]
+            const sigma = 0.87;                                      // surface tension liquid Al [N/m]
+            const d0 = params.bubbleDiam;                            // injected bubble diameter [m]
+
+            // Argon inventory
+            const P_bottom = Ps + RHO_AL * GRAVITY * params.depth + 4 * sigma / d0; // [Pa]
+            const V_bubble0 = (Math.PI / 6) * Math.pow(d0, 3);       // [m³] at injection
+            const nAr_bubble = P_bottom * V_bubble0 / (R * T_K);     // mol Ar per bubble
+            const nAr_flow = (params.flowRate / 1000 / 60) * P_ATM / (R * 273.15); // mol Ar/s (Nl/min)
+            const bubblesPerSec = nAr_flow / nAr_bubble;
+
+            // Conversion: mol H per m³ of melt per (ml/100g)
+            const MOLVOL_STP = 0.022414; // m³/mol
+            const Kconv = (1e-6 / MOLVOL_STP) * 2 * (RHO_AL / 0.1);
+
+            const C_melt = h2_current;   // bulk melt H concentration [ml/100g]
+
+            // March one bubble up through the melt, accumulating absorbed H
+            const N = 60;
+            const dz = params.depth / N;
+            let nH = 0; // mol H absorbed by this bubble so far
+            for (let i = 0; i < N; i++) {
+                const z = (i + 0.5) * dz;                             // height above bottom [m]
+                const P_hyd = Ps + RHO_AL * GRAVITY * (params.depth - z);
+                const d = d0 * Math.cbrt(P_bottom / (P_hyd + 4 * sigma / d0)); // expansion
+                const P_local = P_hyd + 4 * sigma / d;               // local total pressure [Pa]
+                const v = riseVelocity(d);
+                const dt = dz / v;
+                const kL = massTransferCoeff(d, v, params.T);
+                const A_bubble = Math.PI * d * d;
+
+                // H₂ partial pressure that has built up inside the bubble
+                const xH2 = (nH / 2) / (nAr_bubble + nH / 2);        // mole fraction H₂
+                const PH2_atm = xH2 * P_local / P_ATM;
+                const c_bubble = KT * Math.sqrt(PH2_atm);            // melt conc. in eq. with bubble
+
+                // Dynamic driving force (declines as the bubble fills up)
+                const drive = Math.max(0, C_melt - c_bubble) * Kconv; // mol H/m³
+                nH += kL * A_bubble * drive * dt;
+            }
+
+            // Bulk removal rate back in ml/100g per second
+            const V_melt = params.meltMass / RHO_AL;                 // [m³]
+            const removalRate = bubblesPerSec * nH / (V_melt * Kconv);
             return Math.max(0, removalRate);
         }
 
