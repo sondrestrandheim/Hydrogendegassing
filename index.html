@@ -703,18 +703,18 @@
         const K0_solid = 67.14;  // ml/100g
         const dH_solid = 57079;  // J/mol
         
-        // Alloy correction factors — Sigworth, Table 2 in document from arild's word document
+        // Alloy correction factors — Sigworth, 
         // Sigworth eq. (4): C_alloy = 10^(-Σe·Ci - Σr·Ci²)
         // Positive e → element DECREASES H solubility (C < 1)
         // Negative e → element INCREASES H solubility (C > 1)
         const alloyFactors = {
-            Si: { e:  0.03,  r: -0.0008 },  // decreases
-            Mg: { e: -0.01,  r:  0      },  // increases
-            Mn: { e:  0.06,  r:  0      },  // decreases
-            Cu: { e:  0.03,  r: -0.0004 },  // decreases
-            Fe: { e:  0,     r:  0      },  // neutral (Sigworth)
-            Zn: { e:  0.007, r:  0      },  // decreases (e from Anyalebechi)
-            Ti: { e: -0.14,  r:  0      }   // increases (from Anyalebechi)
+            Si: { e:  0.03,  r: -0.0008 },  
+            Mg: { e: -0.01,  r:  0      },  
+            Mn: { e:  0.06,  r:  0      },  
+            Cu: { e:  0.03,  r: -0.0004 },  
+            Fe: { e:  0,     r:  0      },  
+            Zn: { e:  0.007, r:  0      },  
+            Ti: { e: -0.14,  r:  0      }   
         };
 
         // functions for calculations
