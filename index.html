@@ -265,6 +265,7 @@
             <button class="tab" onclick="showTab('pressure')">Pressure Effect</button>
             <button class="tab" onclick="showTab('alloys')">Alloy Effect</button>
             <button class="tab" onclick="showTab('degassing')">Degassing Simulation</button>
+            <button class="tab" onclick="showTab('isir')">I-60 SIR (Real-Life)</button>
             <button class="tab" onclick="showTab('quiz')">Quiz</button>
         </div>
 
@@ -595,6 +596,130 @@
         </div>
 
         
+        <div id="tab-isir" class="tab-content">
+            <div class="info-box">
+                <h3>Real-life case: Hycast I-60 SIR in-line melt refiner</h3>
+                <p>This tab recreates the industrial degassing study by <strong>Mortensen, Hua, Håkonsen, Haugen &amp; Fagerlie</strong> (IFE / Hycast AS) for the two-chamber <strong>I-60 SIR</strong> rotary degassing unit. A 3D finite-element model (Alsim) of the unit was compared with plant measurements of hydrogen removal efficiency. The plots below reproduce the experimental data and the model comparison from the paper.</p>
+                <p style="font-size:0.85rem; color:#555; margin-top:0.4rem;">Operating point: gas usage <strong>150 Nl/tonne Al</strong>, rotor speed <strong>700 rpm</strong>, metal flow <strong>10–63 tonne/h</strong>. Data points are digitised from the paper's figures and are approximate.</p>
+            </div>
+
+            <div class="two-col">
+                <div>
+                    <h3>Efficiency definition (Eq. 22)</h3>
+                    <p>Hydrogen removal efficiency across the unit:</p>
+                    <div class="equation">E = 1 − c<sub>H,out</sub> / c<sub>H,in</sub></div>
+                    <p style="margin-top:0.8rem;"><h3>Sigworth solubility product (Eq. 18–19)</h3></p>
+                    <p>The paper uses the Sigworth relation for the equilibrium interface concentration:</p>
+                    <div class="equation">H = S · C · √P<sub>H</sub></div>
+                    <div class="equation">log₁₀ S = −2692 / T + 2.726</div>
+                    <p style="font-size:0.85rem; color:#555;">T in Kelvin, S in cc/100g, C = alloy correction factor. Higher T → higher S → gas is in equilibrium with more dissolved H → lower efficiency.</p>
+                </div>
+                <div>
+                    <h3>Mass transfer &amp; bubble size</h3>
+                    <p>Hydrogen diffuses into the argon bubbles (Eq. 16):</p>
+                    <div class="equation">Q̇ = k · (c<sub>H</sub><sup>l</sup> − c<sub>H</sub><sup>l*</sup>) · A</div>
+                    <p style="font-size:0.85rem; color:#555;">k = mass transfer coefficient, fitted to <strong>0.5 mm/s</strong> in the study. A = local interfacial area density, computed from local gas fraction and bubble size.</p>
+                    <p style="margin-top:0.6rem;"><strong>Simulated bubble sizes (liquid Al):</strong></p>
+                    <ul style="margin:0.3rem 0 0 1.5rem; font-size:0.9rem;">
+                        <li>Around the rotor: <strong>0.5–3 mm</strong> (high turbulence, break-up)</li>
+                        <li>Higher in the chamber: <strong>5–7 mm</strong> (coalescence)</li>
+                    </ul>
+                    <p style="font-size:0.85rem; color:#555; margin-top:0.4rem;">Bubble size follows a number-density transport equation with turbulent break-up and coalescence sub-models (Hibiki &amp; Ishii).</p>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top:1.5rem;">
+                <h3>Explore the model trends</h3>
+                <p style="font-size:0.9rem;">Adjust metal flow, temperature and magnesium content to see how the predicted efficiency curve shifts — the same trends reported in the paper (higher flow, higher T and higher Mg all reduce efficiency).</p>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Metal flow (tonne/h): <span class="slider-value" id="isir-flow-val">10</span></label>
+                    <input type="range" id="isir-flow" min="10" max="63" step="1" value="10" oninput="updateISirModel()">
+                </div>
+                <div class="control-group">
+                    <label>Melt temperature (°C): <span class="slider-value" id="isir-temp-val">710</span></label>
+                    <input type="range" id="isir-temp" min="680" max="760" step="5" value="710" oninput="updateISirModel()">
+                </div>
+                <div class="control-group">
+                    <label>Magnesium (wt%): <span class="slider-value" id="isir-mg-val">0.5</span></label>
+                    <input type="range" id="isir-mg" min="0" max="5" step="0.1" value="0.5" oninput="updateISirModel()">
+                </div>
+            </div>
+            <div id="isir-model-plot" class="plot-container"></div>
+
+            <div class="info-box" style="margin-top:1.5rem;">
+                <h3>Experiment vs. model (Figure 6)</h3>
+                <p style="font-size:0.9rem;">Measured plant efficiencies for 10 and 25 tonne/h together with the FEM model points, including variations for high temperature (735 °C) and high-Mg alloy (AA5182). The model reproduces the experimental trends: efficiency rises with higher hydrogen input level and falls with higher metal flow, temperature and Mg.</p>
+            </div>
+            <div id="isir-exp-plot" class="plot-container"></div>
+
+            <div class="info-box" style="margin-top:2rem;">
+                <h3>The full 3D CFD model (Eulerian–Eulerian)</h3>
+                <p style="font-size:0.9rem;">The paper solves a two-fluid (Eulerian–Eulerian) model in the FEM code Alsim: both the molten aluminium (continuous liquid) and the argon bubbles (dispersed gas) are treated as interpenetrating continua, coupled through drag and turbulent dispersion. Below are the governing equations. The full 3D field solution cannot run in a browser, but the schematic fields underneath recreate the published results.</p>
+            </div>
+
+            <div class="two-col">
+                <div>
+                    <h3>Momentum — dispersed gas phase</h3>
+                    <p style="font-size:0.85rem;">Because ρ<sup>g</sup>/ρ<sup>l</sup> ≪ 1, inertia and diffusion are neglected, giving a local force balance (Eq. 6):</p>
+                    <div class="equation" style="font-size:0.95rem;">0 = −(α<sup>g</sup>/ρ<sup>g</sup>)∂p/∂x<sub>i</sub> + (α<sup>g</sup>/ρ<sup>g</sup>)(ρ<sup>g</sup>−ρ<sup>l</sup>)g<sub>i</sub> + (ρ<sup>l</sup>α<sup>l</sup>/ρ<sup>g</sup>)D<sub>F</sub>(u<sub>i</sub><sup>l</sup>−u<sub>i</sub><sup>g</sup>) + ρ<sup>l</sup>k<sup>l</sup>C<sub>TD</sub>∂α<sup>g</sup>/∂x<sub>i</sub></div>
+                    <p style="font-size:0.85rem;">Solved for the gas velocity (Eq. 7):</p>
+                    <div class="equation" style="font-size:0.9rem;">u<sub>i</sub><sup>g</sup> = u<sub>i</sub><sup>l</sup> − (α<sup>g</sup>/α<sup>l</sup>)(1/ρ<sup>l</sup>D<sub>F</sub>)∂p/∂x<sub>i</sub> + (α<sup>g</sup>/α<sup>l</sup>)(1/ρ<sup>l</sup>D<sub>F</sub>)(ρ<sup>g</sup>−ρ<sup>l</sup>)g<sub>i</sub> + (ρ<sup>g</sup>k<sup>l</sup>C<sub>TD</sub>/α<sup>l</sup>D<sub>F</sub>)∂α<sup>g</sup>/∂x<sub>i</sub></div>
+                    <p style="font-size:0.85rem; margin-top:0.6rem;"><strong>Drag closure (Eq. 2–5):</strong></p>
+                    <div class="equation" style="font-size:0.95rem;">D<sub>F</sub> = (3/4)(α<sup>g</sup>C<sub>D</sub>/D<sub>s</sub>)|U<sub>l</sub>−U<sub>g</sub>|</div>
+                    <div class="equation" style="font-size:0.95rem;">C<sub>D</sub> = (24/Re<sub>b</sub>)(1 + 0.1·Re<sub>b</sub><sup>0.75</sup>)</div>
+                    <div class="equation" style="font-size:0.95rem;">Re<sub>b</sub> = |U<sub>l</sub>−U<sub>g</sub>|D<sub>s</sub> / ν<sub>l</sub></div>
+                </div>
+                <div>
+                    <h3>Momentum — continuous liquid phase (Eq. 8)</h3>
+                    <div class="equation" style="font-size:0.85rem;">∂(α<sup>l</sup>u<sub>i</sub><sup>l</sup>)/∂t + ∂(α<sup>l</sup>u<sub>i</sub><sup>l</sup>u<sub>j</sub><sup>l</sup>)/∂x<sub>j</sub> = −(α<sup>l</sup>/ρ<sup>l</sup>)∂p/∂x<sub>i</sub> + ∂/∂x<sub>j</sub>[ν<sup>eff</sup>(…)] + (α<sup>l</sup>/ρ<sup>l</sup>)(ρ<sup>l</sup>−ρ<sup>s</sup>)g<sub>i</sub> + (ρ<sup>l</sup>α<sup>l</sup>/ρ<sup>l</sup>)D<sub>F</sub>(u<sub>i</sub><sup>g</sup>−u<sub>i</sub><sup>l</sup>) + ρ<sup>l</sup>k<sup>l</sup>C<sub>TD</sub>∂α<sup>l</sup>/∂x<sub>i</sub></div>
+                    <p style="font-size:0.85rem; margin-top:0.6rem;"><strong>Mass conservation (Eq. 9–10):</strong></p>
+                    <div class="equation" style="font-size:0.95rem;">∂α<sup>l</sup>/∂t + ∂(α<sup>l</sup>u<sub>i</sub><sup>l</sup>)/∂x<sub>j</sub> = 0</div>
+                    <div class="equation" style="font-size:0.95rem;">∂α<sup>g</sup>/∂t + ∂(α<sup>g</sup>u<sub>i</sub><sup>g</sup>)/∂x<sub>j</sub> = 0</div>
+                    <p style="font-size:0.8rem; color:#555;">Turbulence uses a k–ε model on the mixture, with extra source terms for turbulent energy from bubble drag.</p>
+                </div>
+            </div>
+
+            <div class="two-col" style="margin-top:1rem;">
+                <div>
+                    <h3>Bubble number density (Eq. 11–15)</h3>
+                    <p style="font-size:0.85rem;">Interfacial area and number density for spherical bubbles of Sauter diameter D<sub>s</sub>:</p>
+                    <div class="equation" style="font-size:0.95rem;">A = 6α<sup>g</sup> / D<sub>s</sub> &nbsp;&nbsp; n = 6α<sup>g</sup> / (π D<sub>s</sub><sup>3</sup>)</div>
+                    <p style="font-size:0.85rem;">Transport with coalescence R<sub>co</sub> and break-up R<sub>br</sub> (Eq. 13):</p>
+                    <div class="equation" style="font-size:0.95rem;">∂n/∂t + ∂(n u<sub>j</sub><sup>g</sup>)/∂x<sub>j</sub> = R<sub>co</sub> + R<sub>br</sub></div>
+                    <div class="equation" style="font-size:0.82rem;">R<sub>co</sub> = Γ<sub>co</sub>·(α<sub>g</sub>²ε<sup>1/3</sup>/D<sub>s</sub><sup>11/3</sup>)·(α<sub>g</sub>/(α<sub>max</sub>−α<sub>g</sub>))·exp(−K<sub>co</sub>·ρ<sub>l</sub><sup>1/2</sup>D<sub>s</sub><sup>5/6</sup>ε<sup>1/3</sup>/σ<sup>1/2</sup>)</div>
+                    <div class="equation" style="font-size:0.82rem;">R<sub>br</sub> = Γ<sub>br</sub>·(α<sub>g</sub>(1−α<sub>g</sub>)ε<sup>1/3</sup>/D<sub>s</sub><sup>11/3</sup>(α<sub>max</sub>−α<sub>g</sub>))·exp(−K<sub>br</sub>·σ/ρ<sub>l</sub>D<sub>s</sub><sup>5/3</sup>ε<sup>2/3</sup>)</div>
+                    <p style="font-size:0.8rem; color:#555;">Tuned parameters (water model): K<sub>co</sub>=0.129, K<sub>br</sub>=1.37, Γ<sub>br</sub>=0.264, Γ<sub>co</sub>=4.5.</p>
+                </div>
+                <div>
+                    <h3>Gas purging kinetics (Eq. 16–21)</h3>
+                    <p style="font-size:0.85rem;">Hydrogen mass transfer into the gas (Eq. 16):</p>
+                    <div class="equation" style="font-size:0.95rem;">Q̇ = k(c<sub>H</sub><sup>l</sup> − c<sub>H</sub><sup>l*</sup>)A</div>
+                    <p style="font-size:0.85rem;">Mixture H transport (Eq. 17):</p>
+                    <div class="equation" style="font-size:0.85rem;">∂(ρc<sub>H</sub>)/∂t + ∂(ρ<sup>l</sup>α<sup>l</sup>c<sub>H</sub><sup>l</sup>u<sub>j</sub><sup>l</sup> + ρ<sup>g</sup>α<sup>g</sup>c<sub>H</sub><sup>g</sup>u<sub>j</sub><sup>g</sup>)/∂x<sub>j</sub> = ∂/∂x<sub>j</sub>(ρD<sub>H</sub>∂c<sub>H</sub>/∂x<sub>j</sub>)</div>
+                    <p style="font-size:0.85rem;">Interface equilibrium via Sigworth (Eq. 18–21):</p>
+                    <div class="equation" style="font-size:0.95rem;">H = S·C·√P<sub>H</sub> &nbsp;&nbsp; log₁₀S = −2692/T + 2.726</div>
+                    <div class="equation" style="font-size:0.9rem;">P<sub>H</sub> = (ρ<sub>Al</sub>·c<sub>H</sub><sup>g</sup>/100) / (M<sub>r</sub><sup>H₂</sup>·p/RT₀)</div>
+                    <div class="equation" style="font-size:0.9rem;">c<sub>H</sub><sup>l*</sup> = 100%·H·10⁻⁵ (m³/kg) / 11.2 (m³/kg)</div>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top:1.5rem;">
+                <h3>Schematic CFD field results (recreating Figures 3 &amp; 4)</h3>
+                <p style="font-size:0.9rem;">A vertical cross-section of one chamber. Left: average bubble size — small (0.5–3 mm) around the rotor where turbulence breaks bubbles up, growing to 5–7 mm higher up as turbulence decays. Right: gas volume fraction — concentrated around the rotor and in the rising plume.</p>
+            </div>
+            <div class="two-col">
+                <div id="isir-size-field" style="width:100%; height:420px;"></div>
+                <div id="isir-gas-field" style="width:100%; height:420px;"></div>
+            </div>
+
+            <div class="warning">
+                <strong>Note:</strong> This is a simplified pedagogical recreation. The efficiency curve uses a saturating model tuned to the published I-60 SIR data and the Sigworth solubility relation, and the field plots are schematic analytical fields matching the paper's described trends — <em>not</em> the full 3D CFD/FEM computation from the paper.
+            </div>
+        </div>
+
+        
         <div id="tab-quiz" class="tab-content">
             <div class="info-box">
                 <h3>Test your knowledge</h3>
@@ -777,6 +902,7 @@
                 if (tabName === 'alloys') updateAlloyPlot();
                 if (tabName === 'intro') plotIntro();
                 if (tabName === 'degassing') initDegassingPlots();
+                if (tabName === 'isir') initISirPlots();
             }, 50);
         }
 
@@ -1056,6 +1182,7 @@
                 rpm: 700, // fixed for animation (rotor effect is captured via bubble diameter)
                 P_surface: P_mbar * 100 // convert mbar to Pa
             };
+            
         }
 
         // Calculate bubble diameter at height h from bottom (expansion due to pressure)
@@ -1844,6 +1971,166 @@
 
         // jaujau
         plotIntro();
+
+        // === I-60 SIR REAL-LIFE (Mortensen et al.) ===
+        // Sigworth solubility product S (Eq. 19): log10 S = -2692/T + 2.726, T in Kelvin
+        function sigworthS(T_celsius) {
+            const T = T_celsius + 273.15;
+            return Math.pow(10, -2692 / T + 2.726);
+        }
+
+        // Experimental efficiency data digitised from the paper (Figures 2 & 6).
+        // x = hydrogen input level (ml/100g), y = removal efficiency.
+        const iSirExp10 = {
+            x: [0.23, 0.23, 0.24, 0.24, 0.24, 0.28, 0.33, 0.37, 0.41, 0.44, 0.45, 0.45, 0.54, 0.62],
+            y: [0.645, 0.605, 0.575, 0.55, 0.505, 0.645, 0.71, 0.68, 0.785, 0.72, 0.77, 0.68, 0.805, 0.725]
+        };
+        const iSirExp25 = {
+            x: [0.32, 0.34, 0.48, 0.50, 0.58],
+            y: [0.62, 0.675, 0.675, 0.68, 0.705]
+        };
+        // FEM model points from Figure 6
+        const iSirModel10 = { x: [0.45], y: [0.73] };
+        const iSirModel25 = { x: [0.33, 0.50], y: [0.595, 0.638] };
+        const iSirModelHighT = { x: [0.50], y: [0.62] };   // 25 t/h, 735 °C
+        const iSirModelHighMg = { x: [0.50], y: [0.57] };  // 25 t/h, AA5182
+
+        // Simplified saturating efficiency model tuned to the I-60 SIR data.
+        // E = Emax * cin/(cin + K); K grows with metal flow, solubility (T) and Mg.
+        function iSirEfficiency(cin, metalFlow, T_celsius, mg) {
+            const Emax = 0.92;
+            const flowFactor = Math.sqrt(metalFlow / 10);       // 1.0 at 10 t/h
+            const Sratio = sigworthS(T_celsius) / sigworthS(710); // 1.0 at reference 710 °C
+            const Cmg = Math.pow(10, 0.011 * mg);                 // Mg raises H solubility
+            const K = 0.12 * flowFactor * Sratio * Cmg;
+            return Emax * cin / (cin + K);
+        }
+
+        function initISirPlots() {
+            updateISirModel();
+            plotISirExperiment();
+            plotISirFields();
+        }
+
+        function updateISirModel() {
+            const flow = parseFloat(document.getElementById('isir-flow').value);
+            const T = parseFloat(document.getElementById('isir-temp').value);
+            const mg = parseFloat(document.getElementById('isir-mg').value);
+            document.getElementById('isir-flow-val').textContent = flow;
+            document.getElementById('isir-temp-val').textContent = T;
+            document.getElementById('isir-mg-val').textContent = mg.toFixed(1);
+
+            const cin = [];
+            const effSel = [];
+            const effRef = [];
+            for (let c = 0.1; c <= 0.7; c += 0.01) {
+                cin.push(c);
+                effSel.push(iSirEfficiency(c, flow, T, mg));
+                effRef.push(iSirEfficiency(c, 10, 710, 0.5)); // reference: 10 t/h, 710 °C, low Mg
+            }
+
+            const data = [
+                { x: cin, y: effRef, name: 'Reference (10 t/h, 710 °C, Mg 0.5%)',
+                  line: { color: '#95a5a6', width: 2, dash: 'dash' } },
+                { x: cin, y: effSel, name: `Selected (${flow} t/h, ${T} °C, Mg ${mg.toFixed(1)}%)`,
+                  line: { color: '#e74c3c', width: 3 } },
+                { x: iSirExp10.x, y: iSirExp10.y, name: 'Measured 10 t/h', mode: 'markers',
+                  marker: { color: '#2980b9', size: 8, symbol: 'diamond' } },
+                { x: iSirExp25.x, y: iSirExp25.y, name: 'Measured 25 t/h', mode: 'markers',
+                  marker: { color: '#c0392b', size: 8, symbol: 'square' } }
+            ];
+
+            const layout = {
+                title: `I-60 SIR efficiency model (S = ${sigworthS(T).toExponential(2)} cc/100g)`,
+                xaxis: { title: 'Hydrogen input level (ml/100g Al)', gridcolor: '#eee', range: [0.1, 0.7] },
+                yaxis: { title: 'Removal efficiency', gridcolor: '#eee', range: [0.4, 0.9] },
+                plot_bgcolor: 'white', paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' }, legend: { x: 0.02, y: 0.98 }
+            };
+
+            Plotly.newPlot('isir-model-plot', data, layout, { responsive: true });
+        }
+
+        function plotISirExperiment() {
+            const data = [
+                { x: iSirExp10.x, y: iSirExp10.y, name: '10 tonne/h (measured)', mode: 'markers',
+                  marker: { color: '#2980b9', size: 9, symbol: 'diamond' } },
+                { x: iSirExp25.x, y: iSirExp25.y, name: '25 tonne/h (measured)', mode: 'markers',
+                  marker: { color: '#c0392b', size: 9, symbol: 'square' } },
+                { x: iSirModel10.x, y: iSirModel10.y, name: '10 t/h – Model', mode: 'markers',
+                  marker: { color: '#27ae60', size: 13, symbol: 'triangle-up' } },
+                { x: iSirModel25.x, y: iSirModel25.y, name: '25 t/h – Model', mode: 'markers',
+                  marker: { color: '#e74c3c', size: 13, symbol: 'circle' } },
+                { x: iSirModelHighT.x, y: iSirModelHighT.y, name: '25 t/h High T (735 °C)', mode: 'markers',
+                  marker: { color: '#000000', size: 12, symbol: 'x' } },
+                { x: iSirModelHighMg.x, y: iSirModelHighMg.y, name: '25 t/h High Mg (AA5182)', mode: 'markers',
+                  marker: { color: '#8e44ad', size: 12, symbol: 'cross' } }
+            ];
+
+            const layout = {
+                title: 'Experimental & model efficiency (150 Nl/tonne, 700 rpm)',
+                xaxis: { title: 'Hydrogen input level (ml/100g Al)', gridcolor: '#eee', range: [0.1, 0.7] },
+                yaxis: { title: 'Removal efficiency', gridcolor: '#eee', range: [0.4, 0.9] },
+                plot_bgcolor: 'white', paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' }, legend: { x: 1.02, y: 0.98 }
+            };
+
+            Plotly.newPlot('isir-exp-plot', data, layout, { responsive: true });
+        }
+
+        // Schematic 2D fields recreating the CFD results (Figures 3 & 4).
+        // Analytical fields matching the paper's described trends, NOT a real solve.
+        function plotISirFields() {
+            const nx = 41, ny = 51;
+            const xs = [], ys = [];
+            for (let i = 0; i < nx; i++) xs.push(-1 + 2 * i / (nx - 1)); // vessel width
+            for (let j = 0; j < ny; j++) ys.push(j / (ny - 1));          // 0 bottom -> 1 top
+
+            const rotorX = 0, rotorY = 0.13;
+            const zSize = [], zGas = [];
+            for (let j = 0; j < ny; j++) {
+                const y = ys[j];
+                const rowSize = [], rowGas = [];
+                for (let i = 0; i < nx; i++) {
+                    const x = xs[i];
+                    const r2 = (x - rotorX) ** 2 + (y - rotorY) ** 2;
+                    // Turbulence: high near rotor, decays away
+                    const turb = Math.exp(-r2 / 0.06);
+                    // Bubble size: small near rotor (break-up), grows with height (coalescence)
+                    let size = 0.5 + 6.2 * Math.pow(y, 0.9) * (1 - 0.75 * turb);
+                    size = Math.max(0.5, Math.min(7, size));
+                    rowSize.push(size);
+                    // Gas fraction: peak at rotor + rising central plume
+                    const nearRotor = 0.1 * Math.exp(-r2 / 0.015);
+                    const plume = 0.05 * Math.exp(-(x * x) / 0.03) * Math.exp(-Math.pow(y - 0.55, 2) / 0.5);
+                    const gas = Math.min(0.1, nearRotor + plume);
+                    rowGas.push(gas);
+                }
+                zSize.push(rowSize);
+                zGas.push(rowGas);
+            }
+
+            const commonLayout = {
+                xaxis: { title: 'Width', showticklabels: false, zeroline: false },
+                yaxis: { title: 'Height (0 = bottom, rotor)', scaleanchor: 'x', scaleratio: 1 },
+                plot_bgcolor: 'white', paper_bgcolor: 'white',
+                font: { family: 'Segoe UI' }, margin: { t: 40, b: 40, l: 50, r: 20 }
+            };
+
+            Plotly.newPlot('isir-size-field', [{
+                z: zSize, x: xs, y: ys, type: 'contour',
+                colorscale: 'Jet', colorbar: { title: 'mm' },
+                contours: { start: 0.5, end: 7, size: 0.5 }
+            }], Object.assign({ title: 'Average bubble size (mm)' }, JSON.parse(JSON.stringify(commonLayout))),
+                { responsive: true });
+
+            Plotly.newPlot('isir-gas-field', [{
+                z: zGas, x: xs, y: ys, type: 'contour',
+                colorscale: 'Jet', colorbar: { title: 'α_g' },
+                contours: { start: 0, end: 0.1, size: 0.01 }
+            }], Object.assign({ title: 'Gas volume fraction' }, JSON.parse(JSON.stringify(commonLayout))),
+                { responsive: true });
+        }
 
         // === QUIZ FUNCTIONS ===
         const quizExplanations = {
